@@ -33,27 +33,40 @@ function projectorChainHtml(list){
  if(!list||!list.length)return '<div class="waiting">השרשרת עדיין לא התחילה.</div>';
  const CARD_RATIO=2172/724;
  const pad=12;
- const viewport=Math.max(760,Math.min(1840,(window.innerWidth||1280)-52));
+ const viewport=Math.max(760,Math.min(1840,(window.innerWidth||1280)-32));
  const tileW=Math.floor((viewport-(pad*2))/(8+(1/CARD_RATIO)));
  const tileH=Math.round(tileW/CARD_RATIO);
  const turnW=tileH, turnH=tileW;
  const leftX=pad+turnW;
+ const rowStep=turnH;
  const row1Y=pad;
- const row2Y=row1Y+tileH+turnH;
- const row3Y=row2Y+tileH+turnH;
- const row4Y=row3Y+tileH+turnH;
+ const row2Y=row1Y+rowStep;
+ const row3Y=row2Y+rowStep;
+ const row4Y=row3Y+rowStep;
  const items=[];
  const add=(index,x,y,rot,turn=false)=>{if(index>=list.length)return;items.push({tile:list[index],index,x,y,rot,turn,footprintW:turn?turnW:tileW,footprintH:turn?turnH:tileH});};
+
+ // קוביית הצד יושבת כך שהקצה הפנימי שלה מיושר למרכז הקובייה שמעליה/מתחתיה.
+ const leftTurnX=leftX+Math.round(tileW/2)-turnW;
+ const rightTurnX=leftX+Math.round(tileW*6.5);
+ const row1TurnY=row1Y+Math.round(tileH/2);
+ const row2TurnY=row2Y+Math.round(tileH/2);
+ const row3TurnY=row3Y+Math.round(tileH/2);
+
  for(let index=0;index<=7;index++){const col=7-index;add(index,leftX+(col*tileW),row1Y,0,false);}
- const LEFT_TURN_PUSH=Math.round(tileW*0.5);
- add(8,pad+LEFT_TURN_PUSH,row1Y+tileH,-90,true);
+ add(8,leftTurnX,row1TurnY,-90,true);
+
  for(let index=9;index<=15;index++){const col=index-9;add(index,leftX+(col*tileW),row2Y,180,false);}
- add(16,leftX+(7*tileW)-turnW,row2Y+tileH,-90,true);
+ add(16,rightTurnX,row2TurnY,-90,true);
+
  for(let index=17;index<=23;index++){const col=23-index;add(index,leftX+(col*tileW),row3Y,0,false);}
- add(24,pad+LEFT_TURN_PUSH,row3Y+tileH,-90,true);
+ add(24,leftTurnX,row3TurnY,-90,true);
+
  for(let index=25;index<=31;index++){const col=index-25;add(index,leftX+(col*tileW),row4Y,180,false);}
+
  const boardW=Math.ceil(leftX+(8*tileW)+pad);
  const boardH=Math.ceil(row4Y+tileH+pad);
+
  return '<div class="projector-chain-scroll"><div class="projector-chain-board" style="width:'+boardW+'px;height:'+boardH+'px">'+items.map(it=>{const isLast=it.index===list.length-1;const alt=esc((it.tile.answer||'')+' — '+(it.tile.clue||''));return '<div class="projector-domino-pos'+(it.turn?' turn':'')+(isLast?' newest':'')+'" aria-label="'+alt+'" role="img" style="left:'+it.x+'px;top:'+it.y+'px;width:'+it.footprintW+'px;height:'+it.footprintH+'px"><div class="projector-domino-img" style="left:50%;top:50%;width:'+tileW+'px;height:'+tileH+'px;transform:translate(-50%,-50%) rotate('+it.rot+'deg);'+spritePos(Number(it.tile.id)||1)+'"></div></div>';}).join('')+'</div></div>';
 }
 function progress(n){const p=Math.round((n/32)*100);return '<div class="progress"><span style="width:'+p+'%"></span></div><div class="tiny progress-label">'+n+'/32 קוביות</div>';}
