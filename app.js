@@ -16,7 +16,7 @@ const joinUrl=()=>location.origin+'/join?code='+encodeURIComponent(code);
 const projectorUrl=()=>location.origin+'/projector?code='+encodeURIComponent(code)+'&token='+encodeURIComponent(token);
 async function get(extra={}){let u='/api/domino?code='+encodeURIComponent(code);for(const [k,v] of Object.entries(extra))if(v)u+='&'+encodeURIComponent(k)+'='+encodeURIComponent(v);const r=await fetch(u,{cache:'no-store'});let d={};try{d=await r.json();}catch(e){}if(!r.ok){const er=new Error(d.error||'request');er.code=d.error;throw er;}return d;}
 async function post(body,includeCode=true){const payload=includeCode?{...body,code}:body;const r=await fetch('/api/domino',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});let d={};try{d=await r.json();}catch(e){}if(!r.ok){const er=new Error(d.error||'request');er.code=d.error;throw er;}return d;}
-function hero(sub){return '<section class="hero"><img class="hero-image" src="/hero-genetic.svg?v=6" alt="" aria-hidden="true"><div class="hero-panel"><div class="eyebrow">ביוטכנולוגיה · הנדסה גנטית</div><h1>דומינו בהנדסה גנטית</h1><p>'+esc(sub||'מקשיבים לרמז. מחכים לרגע הנכון. מחברים את השרשרת.')+'</p></div></section>';}
+function hero(sub){return '<section class="hero"><img class="hero-image" src="/hero-genetic.jpg?v=7" alt="" aria-hidden="true"><div class="hero-panel"><div class="eyebrow">ביוטכנולוגיה · הנדסה גנטית</div><h1>דומינו בהנדסה גנטית</h1><p>'+esc(sub||'מקשיבים לרמז. מחכים לרגע הנכון. מחברים את השרשרת.')+'</p></div></section>';}
 function spritePos(id){
  const n=Math.max(1,Math.min(32,Number(id)||1))-1;
  const col=n%4,row=Math.floor(n/4);
