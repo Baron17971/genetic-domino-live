@@ -34,14 +34,13 @@ function projectorChainHtml(list){
  const recent=list.slice(-3);
  const newest=recent[recent.length-1];
  const prev=recent.slice(0,-1);
- const prevLabels=prev.length===1 ? ['הקודמת'] : ['לפני הקודמת','הקודמת'];
- const bigAlt=esc((newest.answer||'')+' — '+(newest.clue||''));
+  const bigAlt=esc((newest.answer||'')+' — '+(newest.clue||''));
 
  return '<div class="focus2-chain">'
-   +(list.length>1?'<div class="focus2-caption">כך השרשרת מתהווה — שתי הקוביות האחרונות והקובייה החדשה</div>':'<div class="focus2-caption">תחילת השרשרת</div>')
+   +'<div class="focus2-caption">בונים ידע - יוצרים חיבורים</div>'
    +(prev.length?'<div class="focus2-prev" dir="rtl">'+prev.map((t,i)=>{
       const alt=esc((t.answer||'')+' — '+(t.clue||''));
-      return '<div class="focus2-mini"><div class="focus2-mini-label">'+esc(prevLabels[i]||'')+'</div><div class="focus2-mini-tile" role="img" aria-label="'+alt+'" style="'+spritePos(Number(t.id)||1)+'"></div></div>';
+      return '<div class="focus2-mini"><div class="focus2-mini-tile" role="img" aria-label="'+alt+'" style="'+spritePos(Number(t.id)||1)+'"></div></div>';
     }).join('<div class="focus2-mini-connector" aria-hidden="true"></div>')+'</div>':'')
    +'<div class="focus2-arrow" aria-hidden="true"><span></span></div>'
    +'<div class="focus2-newest"><div class="focus2-newest-label">הקובייה החדשה</div><div class="focus2-big-tile" role="img" aria-label="'+bigAlt+'" style="'+spritePos(Number(newest.id)||1)+'"></div><div class="focus2-badge">התווספה עכשיו</div></div>'
