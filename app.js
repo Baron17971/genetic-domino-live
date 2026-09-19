@@ -31,43 +31,22 @@ function tile(t,compact=false){
 function chainHtml(list){if(!list||!list.length)return '<div class="waiting">השרשרת עדיין לא התחילה.</div>';const mobile=window.matchMedia('(max-width:760px)').matches;const perRow=mobile?2:4;const rows=[];for(let i=0;i<list.length;i+=perRow)rows.push(list.slice(i,i+perRow));return '<div class="chain-board">'+rows.map((row,ri)=>{const dir=ri%2===0?'rtl':'ltr';const cells=row.map((t,ci)=>{const globalIndex=ri*perRow+ci;const isLast=globalIndex===list.length-1;return '<div class="chain-cell'+(isLast?' newest':'')+'">'+tile(t,true)+'</div>';}).join('');const connector=ri<rows.length-1?'<div class="chain-turn" aria-hidden="true"><span></span></div>':'';return '<div class="chain-row '+dir+'">'+cells+connector+'</div>';}).join('')+'</div>';}
 function projectorChainHtml(list){
  if(!list||!list.length)return '<div class="waiting">השרשרת עדיין לא התחילה.</div>';
- const CARD_RATIO=2172/724;
- const pad=12;
- const viewport=Math.max(760,Math.min(1840,(window.innerWidth||1280)-32));
- const tileW=Math.floor((viewport-(pad*2))/(8+(1/CARD_RATIO)));
- const tileH=Math.round(tileW/CARD_RATIO);
- const turnW=tileH, turnH=tileW;
- const leftX=pad+turnW;
- const rowStep=turnH;
- const row1Y=pad;
- const row2Y=row1Y+rowStep;
- const row3Y=row2Y+rowStep;
- const row4Y=row3Y+rowStep;
- const items=[];
- const add=(index,x,y,rot,turn=false)=>{if(index>=list.length)return;items.push({tile:list[index],index,x,y,rot,turn,footprintW:turn?turnW:tileW,footprintH:turn?turnH:tileH});};
+ const recent=list.slice(-3);
+ const newest=recent[recent.length-1];
+ const prev=recent.slice(0,-1);
+ const prevLabels=prev.length===1 ? ['הקודמת'] : ['לפני הקודמת','הקודמת'];
+ const bigAlt=esc((newest.answer||'')+' — '+(newest.clue||''));
 
- // קוביית הצד יושבת כך שהקצה הפנימי שלה מיושר למרכז הקובייה שמעליה/מתחתיה.
- const leftTurnX=leftX+Math.round(tileW/2)-turnW;
- const rightTurnX=leftX+Math.round(tileW*6.5);
- const row1TurnY=row1Y+Math.round(tileH/2);
- const row2TurnY=row2Y+Math.round(tileH/2);
- const row3TurnY=row3Y+Math.round(tileH/2);
-
- for(let index=0;index<=7;index++){const col=7-index;add(index,leftX+(col*tileW),row1Y,0,false);}
- add(8,leftTurnX,row1TurnY,-90,true);
-
- for(let index=9;index<=15;index++){const col=index-9;add(index,leftX+(col*tileW),row2Y,180,false);}
- add(16,rightTurnX,row2TurnY,-90,true);
-
- for(let index=17;index<=23;index++){const col=23-index;add(index,leftX+(col*tileW),row3Y,0,false);}
- add(24,leftTurnX,row3TurnY,-90,true);
-
- for(let index=25;index<=31;index++){const col=index-25;add(index,leftX+(col*tileW),row4Y,180,false);}
-
- const boardW=Math.ceil(leftX+(8*tileW)+pad);
- const boardH=Math.ceil(row4Y+tileH+pad);
-
- return '<div class="projector-chain-scroll"><div class="projector-chain-board" style="width:'+boardW+'px;height:'+boardH+'px">'+items.map(it=>{const isLast=it.index===list.length-1;const alt=esc((it.tile.answer||'')+' — '+(it.tile.clue||''));return '<div class="projector-domino-pos'+(it.turn?' turn':'')+(isLast?' newest':'')+'" aria-label="'+alt+'" role="img" style="left:'+it.x+'px;top:'+it.y+'px;width:'+it.footprintW+'px;height:'+it.footprintH+'px"><div class="projector-domino-img" style="left:50%;top:50%;width:'+tileW+'px;height:'+tileH+'px;transform:translate(-50%,-50%) rotate('+it.rot+'deg);'+spritePos(Number(it.tile.id)||1)+'"></div></div>';}).join('')+'</div></div>';
+ return '<div class="focus2-chain">'
+   +(list.length>1?'<div class="focus2-caption">כך השרשרת מתהווה — שתי הקוביות האחרונות והקובייה החדשה</div>':'<div class="focus2-caption">תחילת השרשרת</div>')
+   +(prev.length?'<div class="focus2-prev" dir="rtl">'+prev.map((t,i)=>{
+      const alt=esc((t.answer||'')+' — '+(t.clue||''));
+      return '<div class="focus2-mini"><div class="focus2-mini-label">'+esc(prevLabels[i]||'')+'</div><div class="focus2-mini-tile" role="img" aria-label="'+alt+'" style="'+spritePos(Number(t.id)||1)+'"></div></div>';
+    }).join('<div class="focus2-mini-connector" aria-hidden="true"></div>')+'</div>':'')
+   +'<div class="focus2-arrow" aria-hidden="true"><span></span></div>'
+   +'<div class="focus2-newest"><div class="focus2-newest-label">הקובייה החדשה</div><div class="focus2-big-tile" role="img" aria-label="'+bigAlt+'" style="'+spritePos(Number(newest.id)||1)+'"></div><div class="focus2-badge">התווספה עכשיו</div></div>'
+   +(list.length>1?'<div class="focus2-meta">סה״כ חוברו עד כה <strong>'+list.length+'</strong> קוביות מתוך 32</div>':'')
+   +'</div>';
 }
 function progress(n){const p=Math.round((n/32)*100);return '<div class="progress"><span style="width:'+p+'%"></span></div><div class="tiny progress-label">'+n+'/32 קוביות</div>';}
 function complete(){return '<div class="complete"><strong>השרשרת הושלמה ✓</strong><span>ביוטכנולוגיה זה ב־DNA שלך..</span></div>';}
