@@ -20,22 +20,41 @@ function normalisePairs(raw){
 }
 function makeTiles(pairs){
  if(!pairs.length)return[];
- const tiles=[{id:1,left:'התחלה',right:pairs[0].right}];
- for(let i=0;i<pairs.length-1;i++)tiles.push({id:i+2,left:pairs[i].left,right:pairs[i+1].right});
- tiles.push({id:pairs.length+1,left:pairs[pairs.length-1].left,right:'סיום'});
+ const color=i=>((i%5)+5)%5;
+ const tiles=[{id:1,left:'התחלה',right:pairs[0].right,leftColor:4,rightColor:color(0)}];
+ for(let i=0;i<pairs.length-1;i++)tiles.push({id:i+2,left:pairs[i].left,right:pairs[i+1].right,leftColor:color(i),rightColor:color(i+1)});
+ tiles.push({id:pairs.length+1,left:pairs[pairs.length-1].left,right:'סיום',leftColor:color(pairs.length-1),rightColor:4});
  return tiles;
 }
 async function room(code){return cache().get(roomKey(code));}
 async function saveRoom(r){await cache().set(roomKey(r.code),r,{ttl:TTL});}
-async function game(code){return (await cache().get(gameKey(code)))||{phase:'lobby',version:1,chainCount:0,chain:[],assignments:{},players:[],lastPlayer:''};}
+async function game(code){return (await cache().get(gameKey(code)))||{phase:'lobby',version:1,chainCount:0,chain:[],assignments:{},players:[],lastPlayer:'',turnStartedAt:0,timeoutCount:0};}
 async function save(code,g){await cache().set(gameKey(code),g,{ttl:TTL});}
 async function roster(code){const shards=await Promise.all(Array.from({length:SHARDS},(_,i)=>cache().get(rosterKey(code,i))));const out=[];for(const s of shards)if(s)for(const p of Object.values(s))if(p&&p.id&&p.name)out.push(p);return out.sort((a,b)=>(a.joinedAt||0)-(b.joinedAt||0));}
 async function join(code,id,name){const key=rosterKey(code,hash(id)%SHARDS);for(let a=0;a<5;a++){const cur=await cache().get(key)||{};const next={...cur,[id]:{id,name,joinedAt:cur[id]?.joinedAt||Date.now()}};await cache().set(key,next,{ttl:TTL});const v=await cache().get(key)||{};if(v[id])return v[id];await new Promise(r=>setTimeout(r,25+a*20));}throw new Error('join_race');}
 async function clearRoster(code){await Promise.all(Array.from({length:SHARDS},(_,i)=>cache().delete(rosterKey(code,i))));}
 function tileBy(tiles,id){return tiles[Number(id)-1]||null;}
-function publicState(g,tiles){const last=g.chainCount?tileBy(tiles,g.chainCount):null;return{phase:g.phase,version:g.version||1,chainCount:g.chainCount||0,chain:(g.chain||[]).map(id=>tileBy(tiles,id)).filter(Boolean),currentClue:last?.right||'',lastPlayer:g.lastPlayer||'',tileCount:tiles.length};}
+function publicState(g,tiles){const last=g.chainCount?tileBy(tiles,g.chainCount):null;return{phase:g.phase,version:g.version||1,chainCount:g.chainCount||0,chain:(g.chain||[]).map(id=>tileBy(tiles,id)).filter(Boolean),currentClue:last?.right||'',lastPlayer:g.lastPlayer||'',tileCount:tiles.length,turnStartedAt:g.turnStartedAt||0,timeoutCount:g.timeoutCount||0};}
 function remainingIds(g,tiles){const used=new Set(g.chain||[]);const assigned=new Set(Object.values(g.assignments||{}).map(Number));return tiles.map(t=>t.id).filter(id=>id>1&&!used.has(id)&&!assigned.has(id));}
 function ensureNext(g,lastPlayerId,tiles){const next=(g.chainCount||0)+1;if(next>tiles.length)return;const values=Object.values(g.assignments||{}).map(Number);if(values.includes(next))return;const holders=Object.keys(g.assignments||{});if(!holders.length)return;const choices=holders.filter(id=>id!==lastPlayerId);const pool=choices.length?choices:holders;g.assignments[pool[crypto.randomInt(pool.length)]]=next;}
+function rotateTimedOutTurn(g,tiles){
+ if(g.phase!=='playing')return false;
+ const next=(g.chainCount||0)+1;if(next>tiles.length)return false;
+ const now=Date.now();if(!g.turnStartedAt){g.turnStartedAt=now;return true}
+ if(now-g.turnStartedAt<15000)return false;
+ const assignments=g.assignments||{};
+ let holder=Object.keys(assignments).find(id=>Number(assignments[id])===next)||'';
+ if(!holder){ensureNext(g,'',tiles);holder=Object.keys(assignments).find(id=>Number(assignments[id])===next)||''}
+ const candidates=(g.players||[]).map(p=>p.id).filter(id=>id&&id!==holder);
+ if(holder&&candidates.length){
+  const target=candidates[crypto.randomInt(candidates.length)];
+  const targetTile=assignments[target];
+  assignments[target]=next;
+  if(targetTile)assignments[holder]=targetTile;else delete assignments[holder];
+ }
+ g.turnStartedAt=now;g.timeoutCount=(g.timeoutCount||0)+1;g.version=(g.version||1)+1;
+ return true;
+}
 
 export default async function handler(req,res){
  res.setHeader('Cache-Control','no-store');
@@ -51,7 +70,7 @@ export default async function handler(req,res){
    if(!code)return res.status(503).json({error:'code'});
    const now=Date.now();
    const r={code,teacherToken:crypto.randomBytes(24).toString('hex'),className:clean(b.className,60),title:clean(b.title,80)||'דומינו זוגות',pairs,createdAt:now,lastActiveAt:now};
-   await saveRoom(r);await save(code,{phase:'lobby',version:1,chainCount:0,chain:[],assignments:{},players:[],lastPlayer:''});
+   await saveRoom(r);await save(code,{phase:'lobby',version:1,chainCount:0,chain:[],assignments:{},players:[],lastPlayer:'',turnStartedAt:0,timeoutCount:0});
    return res.status(201).json({code,teacherToken:r.teacherToken,className:r.className,title:r.title});
   }
   const code=clean(req.method==='GET'?req.query?.code:(b.code||''),10);
@@ -78,20 +97,25 @@ export default async function handler(req,res){
    if(!assigned)return res.status(409).json({error:'no_tile'});
    if(assigned!==needed)return res.json({correct:false});
    const player=(g.players||[]).find(p=>p.id===id);
-   g.chainCount=needed;g.chain=[...(g.chain||[]),needed];g.lastPlayer=player?.name||'';delete g.assignments[id];
+   g.chainCount=needed;g.chain=[...(g.chain||[]),needed];g.lastPlayer=player?.name||'';g.turnStartedAt=Date.now();delete g.assignments[id];
    if(needed>=tiles.length)g.phase='complete';
    else{const pool=remainingIds(g,tiles);if(pool.length)g.assignments[id]=pool[crypto.randomInt(pool.length)];ensureNext(g,id,tiles);}
    g.version=(g.version||1)+1;await save(code,g);r.lastActiveAt=Date.now();await saveRoom(r);return res.json({correct:true,complete:g.phase==='complete'});
   }
   if(!sameToken(clean(b.teacherToken,120),r.teacherToken))return res.status(403).json({error:'teacher_auth_failed'});
+  if(action==='tick'){
+   const changed=rotateTimedOutTurn(g,tiles);
+   if(changed){await save(code,g);r.lastActiveAt=Date.now();await saveRoom(r)}
+   return res.json({ok:true,rotated:changed,version:g.version||1,turnStartedAt:g.turnStartedAt||0});
+  }
   if(action==='start'){
    const all=await roster(code);if(!all.length)return res.status(409).json({error:'no_players'});
    const players=shuffle(all),active=players.slice(0,Math.min(players.length,tiles.length-1));
    const rest=shuffle(tiles.slice(2).map(t=>t.id)),deal=[2,...rest].slice(0,active.length),assignments={};active.forEach((p,i)=>assignments[p.id]=deal[i]);
-   await save(code,{phase:'playing',version:(g.version||1)+1,chainCount:1,chain:[1],assignments,players,lastPlayer:''});r.lastActiveAt=Date.now();await saveRoom(r);return res.json({ok:true});
+   await save(code,{phase:'playing',version:(g.version||1)+1,chainCount:1,chain:[1],assignments,players,lastPlayer:'',turnStartedAt:Date.now(),timeoutCount:0});r.lastActiveAt=Date.now();await saveRoom(r);return res.json({ok:true});
   }
-  if(action==='reset'){await save(code,{phase:'lobby',version:(g.version||1)+1,chainCount:0,chain:[],assignments:{},players:[],lastPlayer:''});r.lastActiveAt=Date.now();await saveRoom(r);return res.json({ok:true});}
-  if(action==='newRoster'){await clearRoster(code);await save(code,{phase:'lobby',version:(g.version||1)+1,chainCount:0,chain:[],assignments:{},players:[],lastPlayer:''});r.lastActiveAt=Date.now();await saveRoom(r);return res.json({ok:true});}
+  if(action==='reset'){await save(code,{phase:'lobby',version:(g.version||1)+1,chainCount:0,chain:[],assignments:{},players:[],lastPlayer:'',turnStartedAt:0,timeoutCount:0});r.lastActiveAt=Date.now();await saveRoom(r);return res.json({ok:true});}
+  if(action==='newRoster'){await clearRoster(code);await save(code,{phase:'lobby',version:(g.version||1)+1,chainCount:0,chain:[],assignments:{},players:[],lastPlayer:'',turnStartedAt:0,timeoutCount:0});r.lastActiveAt=Date.now();await saveRoom(r);return res.json({ok:true});}
   return res.status(400).json({error:'action'});
  }catch(e){console.error(e);return res.status(500).json({error:'server_error'});}
 }
