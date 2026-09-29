@@ -117,6 +117,7 @@ if(n.phase!==d.phase){stableRerender(renderTeacher);return}
 if(d.phase!=='lobby'&&(nextChain!==prevChain||nextClue!==prevClue)){stableRerender(renderTeacher);return}
 const oldPlayers=d.players||[],newPlayers=n.players||[];
 if(newPlayers.length!==oldPlayers.length){
+ const sx=window.scrollX,sy=window.scrollY;
  const roster=document.querySelector('.roster');
  const countHeading=roster?.previousElementSibling;
  if(countHeading)countHeading.textContent='תלמידים מחוברים: '+newPlayers.length;
@@ -124,6 +125,7 @@ if(newPlayers.length!==oldPlayers.length){
  const start=document.getElementById('startGame');
  if(start)start.disabled=!newPlayers.length;
  d.players=newPlayers;
+ requestAnimationFrame(()=>window.scrollTo(sx,sy));
 }
 d.version=n.version}catch{}});
  }catch{root.innerHTML='<div class="shell">'+hero()+'<section class="card"><h2>לא ניתן לפתוח את מסך המורה</h2><a class="btn pri linkbtn" href="/">פתיחת משחק חדש</a></section></div>'}
