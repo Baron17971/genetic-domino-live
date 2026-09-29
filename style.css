@@ -80,3 +80,26 @@ body.landing footer{display:none}
  .home-demo-panel{padding:22px 16px 18px;border-radius:22px}
  .demo-sample-tile{height:150px}
 }
+
+/* DomiKnow domino palette: matching concept+definition share the same color key. */
+.domino{border-color:rgba(4,22,56,.42);background:transparent}
+.domino-half{color:#fffaf1;font-weight:700;text-shadow:0 1px 1px rgba(0,0,0,.18);transition:background-color .2s ease}
+.domino-half+.domino-half{border-right:2px solid rgba(255,255,255,.72);background:inherit}
+.domino-half.dc-0{background:#061a44} /* navy */
+.domino-half.dc-1{background:#86113e} /* burgundy */
+.domino-half.dc-2{background:#0b6769} /* deep teal */
+.domino-half.dc-3{background:#55306f} /* deep violet */
+.domino-half.dc-4{background:#9b6818} /* dark ochre */
+.turn-timer{margin-top:14px;min-height:58px;border-radius:16px;padding:10px 14px;display:flex;align-items:center;justify-content:center;gap:8px;background:#f3edf6;color:#482356;text-align:center}
+.turn-timer strong{font-size:1.65rem;line-height:1}
+.turn-timer.warning{background:#8e113f;color:#fff7f3;display:grid;gap:4px;border:2px solid #f0b44b;animation:dominoWarningPulse .7s ease-in-out infinite alternate}
+.turn-timer.warning strong{font-size:1.18rem}
+.turn-timer.warning span,.turn-timer.warning b{display:block}
+.projector-turn-timer{font-size:1.05rem;padding:14px 20px}
+.projector-turn-timer.warning{font-size:1.3rem;box-shadow:0 0 0 8px rgba(142,17,63,.13)}
+.student-turn-timer{margin-bottom:8px}
+@keyframes dominoWarningPulse{from{transform:scale(1);box-shadow:0 0 0 0 rgba(240,180,75,.15)}to{transform:scale(1.015);box-shadow:0 0 0 9px rgba(240,180,75,.28)}}
+@media(max-width:760px){
+ .turn-timer{min-height:52px}
+ .turn-timer strong{font-size:1.4rem}
+}
