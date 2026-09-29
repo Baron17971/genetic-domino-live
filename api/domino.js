@@ -69,7 +69,7 @@ export default async function handler(req,res){
    let code='';for(let i=0;i<10;i++){const c=newCode();if(!await room(c)){code=c;break;}}
    if(!code)return res.status(503).json({error:'code'});
    const now=Date.now();
-   const allowedPalettes=new Set(['beach','classic','ocean','berry','earth']),allowedPatterns=new Set(['grid','dots','wave','grain','corners']);const palette=allowedPalettes.has(clean(b.palette,20))?clean(b.palette,20):'beach',pattern=allowedPatterns.has(clean(b.pattern,20))?clean(b.pattern,20):'grid';const r={code,teacherToken:crypto.randomBytes(24).toString('hex'),className:clean(b.className,60),title:clean(b.title,80)||'דומינו זוגות',palette,pattern,pairs,createdAt:now,lastActiveAt:now};
+   const allowedPalettes=new Set(['beach','classic','ocean','berry','earth']),allowedPatterns=new Set(['circles','leaves','ribbons','hearts','softcorners','grid','dots','wave','grain','corners']);const palette=allowedPalettes.has(clean(b.palette,20))?clean(b.palette,20):'beach',pattern=allowedPatterns.has(clean(b.pattern,20))?clean(b.pattern,20):'circles';const r={code,teacherToken:crypto.randomBytes(24).toString('hex'),className:clean(b.className,60),title:clean(b.title,80)||'דומינו זוגות',palette,pattern,pairs,createdAt:now,lastActiveAt:now};
    await saveRoom(r);await save(code,{phase:'lobby',version:1,chainCount:0,chain:[],assignments:{},players:[],lastPlayer:'',turnStartedAt:0,timeoutCount:0});
    return res.status(201).json({code,teacherToken:r.teacherToken,className:r.className,title:r.title});
   }
@@ -80,7 +80,7 @@ export default async function handler(req,res){
   if(req.method==='GET'){
    const g=await game(code),teacher=sameToken(clean(req.query?.teacherToken,120),r.teacherToken),id=clean(req.query?.playerId,140);
    const livePlayers=g.phase==='lobby'?await roster(code):(g.players||[]);
-   const out={...publicState(g,tiles),teacher,className:r.className||'',title:r.title||'דומינו זוגות',palette:r.palette||'beach',pattern:r.pattern||'grid',pairCount:(r.pairs||[]).length,players:livePlayers.map(p=>({id:p.id,name:p.name}))};
+   const out={...publicState(g,tiles),teacher,className:r.className||'',title:r.title||'דומינו זוגות',palette:r.palette||'beach',pattern:r.pattern||'circles',pairCount:(r.pairs||[]).length,players:livePlayers.map(p=>({id:p.id,name:p.name}))};
    if(id){const p=livePlayers.find(x=>x.id===id);out.joined=Boolean(p);out.myTile=g.assignments?.[id]?tileBy(tiles,g.assignments[id]):null;}
    return res.json(out);
   }
