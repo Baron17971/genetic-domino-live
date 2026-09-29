@@ -572,3 +572,18 @@ input:focus,textarea:focus{
 .projector-clue{
   color:#FFFDF8;
 }
+
+/* Open clue: olive-sage sampled from the DomiKnow banner foliage */
+.open-clue{
+  background:linear-gradient(135deg,#6E7650,#7E8660);
+  border-color:rgba(255,253,248,.26);
+  color:#FFFDF8;
+  box-shadow:0 10px 24px rgba(67,74,45,.11);
+}
+.open-clue span{
+  color:rgba(255,253,248,.78);
+}
+.open-clue b,
+.projector-clue{
+  color:#FFFDF8;
+}
