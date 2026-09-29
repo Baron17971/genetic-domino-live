@@ -88,6 +88,62 @@ const patternIds=new Set(patterns.map(p=>p.id));
 function savedDesign(){try{const d=JSON.parse(sessionStorage.getItem(DESIGN_KEY)||'')||{};return{palette:d.palette||'beach',pattern:patternIds.has(d.pattern)?d.pattern:'leaves'}}catch{return{palette:'beach',pattern:'leaves'}}}
 function saveDesign(d){sessionStorage.setItem(DESIGN_KEY,JSON.stringify(d));applyDesign(d)}
 function applyDesign(d={}){const p=d.palette||'beach',x=d.pattern||'leaves';document.documentElement.dataset.dominoPalette=p;document.documentElement.dataset.dominoPattern=x}
+const MODE_KEY='domiknow-mode-v1',GROUPS_KEY='domiknow-run-groups-v1';
+function savedMode(){return sessionStorage.getItem(MODE_KEY)||'classic'}
+function saveMode(mode){sessionStorage.setItem(MODE_KEY,mode)}
+function savedRunGroups(){
+ try{
+  const d=JSON.parse(sessionStorage.getItem(GROUPS_KEY)||'')||{};
+  const count=Math.max(2,Math.min(4,Number(d.count)||2));
+  const defaults=['קבוצה 1','קבוצה 2','קבוצה 3','קבוצה 4'];
+  const names=Array.from({length:count},(_,i)=>(d.names?.[i]||defaults[i]).trim()||defaults[i]);
+  return{count,names}
+ }catch{return{count:2,names:['קבוצה 1','קבוצה 2']}}
+}
+function saveRunGroups(d){sessionStorage.setItem(GROUPS_KEY,JSON.stringify(d))}
+function renderMode(){
+ clearInterval(timer);document.body.classList.remove('projector','landing');applyDesign(savedDesign());
+ const mode=savedMode();
+ root.innerHTML='<div class="shell mode-shell">'+hero('בחרו איך הכיתה תשחק','DomiKnow')+
+ '<div class="setup-topbar"><button class="btn ghost back-home" id="modeBack">← חזרה לעיצוב</button></div>'+
+ '<section class="card mode-card"><div class="design-kicker">מצב משחק</div><h2>איך תרצו לשחק?</h2><p class="muted">אפשר לבנות יחד שרשרת אחת, או להפוך את הפעילות למרוץ קבוצות.</p>'+
+ '<div class="mode-grid">'+
+ '<button type="button" class="mode-choice '+(mode==='classic'?'selected':'')+'" id="modeClassic"><span class="mode-badge">Classic</span><strong>DomiKnow Classic</strong><span>כל הכיתה בונה יחד שרשרת אחת משותפת.</span><b>שרשרת אחת · קצב כיתתי</b></button>'+
+ '<button type="button" class="mode-choice run '+(mode==='run'?'selected':'')+'" id="modeRun"><span class="mode-badge">Run</span><strong>DomiKnow Run</strong><span>הכיתה מתחלקת לקבוצות שמתחרות על השלמת המושגים שלהן.</span><b>2–4 קבוצות · מרוץ חי</b></button>'+
+ '</div></section></div>';
+ document.getElementById('modeBack').onclick=renderDesign;
+ document.getElementById('modeClassic').onclick=()=>{saveMode('classic');renderSetup()};
+ document.getElementById('modeRun').onclick=()=>{saveMode('run');renderGroups()};
+}
+function renderGroups(){
+ clearInterval(timer);document.body.classList.remove('projector','landing');applyDesign(savedDesign());saveMode('run');
+ let data=savedRunGroups();
+ const rows=()=>Array.from({length:data.count},(_,i)=>'<label class="group-name-field"><span><i>'+(i+1)+'</i> קבוצה '+(i+1)+'</span><input class="run-group-name" data-group-index="'+i+'" maxlength="24" value="'+esc(data.names[i]||('קבוצה '+(i+1)))+'" placeholder="שם הקבוצה"></label>').join('');
+ root.innerHTML='<div class="shell groups-shell">'+hero('מגדירים את קבוצות המרוץ','DomiKnow Run')+
+ '<div class="setup-topbar"><button class="btn ghost back-home" id="groupsBack">← חזרה לבחירת מצב</button></div>'+
+ '<section class="card groups-card"><div class="design-kicker">DomiKnow Run</div><h2>כמה קבוצות משתתפות?</h2><p class="muted">בחרו 2–4 קבוצות ותנו להן שמות. בהמשך התלמידים ישויכו לקבוצות והמסך הראשי יציג רק את ההתקדמות של כל קבוצה.</p>'+
+ '<div class="group-count" role="group" aria-label="מספר קבוצות">'+[2,3,4].map(n=>'<button type="button" class="group-count-btn '+(data.count===n?'selected':'')+'" data-count="'+n+'">'+n+' קבוצות</button>').join('')+'</div>'+
+ '<div class="group-names" id="groupNames">'+rows()+'</div>'+
+ '<button class="btn pri groups-next" id="groupsNext">המשך ליצירת המשחק</button></section></div>';
+ document.getElementById('groupsBack').onclick=renderMode;
+ const bindInputs=()=>document.querySelectorAll('.run-group-name').forEach(inp=>inp.addEventListener('input',()=>{const i=Number(inp.dataset.groupIndex);data.names[i]=inp.value;saveRunGroups(data)}));
+ bindInputs();
+ document.querySelectorAll('[data-count]').forEach(btn=>btn.onclick=()=>{
+   const current=[...document.querySelectorAll('.run-group-name')].map(x=>x.value);
+   data.names=current;
+   data.count=Number(btn.dataset.count);
+   while(data.names.length<data.count)data.names.push('קבוצה '+(data.names.length+1));
+   data.names=data.names.slice(0,data.count);
+   saveRunGroups(data);
+   renderGroups();
+ });
+ document.getElementById('groupsNext').onclick=()=>{
+   const names=[...document.querySelectorAll('.run-group-name')].map((x,i)=>x.value.trim()||('קבוצה '+(i+1)));
+   saveRunGroups({count:data.count,names});
+   renderSetup();
+ };
+}
+
 function renderDesign(){
  clearInterval(timer);document.body.classList.remove('projector','landing');
  let design=savedDesign();applyDesign(design);
@@ -97,7 +153,7 @@ function renderDesign(){
  document.getElementById('designBack').onclick=renderHome;
  document.querySelectorAll('[data-palette]').forEach(b=>b.onclick=()=>{design={...design,palette:b.dataset.palette};saveDesign(design);renderDesign()});
  document.querySelectorAll('[data-pattern]').forEach(b=>b.onclick=()=>{design={...design,pattern:b.dataset.pattern};saveDesign(design);renderDesign()});
- document.getElementById('designNext').onclick=renderSetup;
+ document.getElementById('designNext').onclick=renderMode;
  fitDominoText();
 }
 function renderHome(){
@@ -115,12 +171,12 @@ function renderHome(){
 function renderSetup(){
  document.body.classList.remove('projector','landing');applyDesign(savedDesign());const last=localStorage.getItem('pairs-domino-last-teacher')||'';
  root.innerHTML='<div class="shell setup-shell">'+hero('יוצרים משחק חדש','DomiKnow')+'<div class="setup-topbar"><button class="btn ghost back-home" id="backHome">← חזרה לעיצוב</button></div>'+
- '<section class="card create-game-card" id="createGameSection"><h2>יצירת משחק חדש</h2><div class="grid"><div><label class="field"><span>מקצוע</span><input id="subjectName" maxlength="60" placeholder="לדוגמה: ביולוגיה"></label><label class="field"><span>כיתה</span><input id="className" maxlength="60" placeholder="לדוגמה: ח׳2"></label><label class="field"><span>נושא</span><input id="topicName" maxlength="80" placeholder="לדוגמה: מערכת הנשימה"></label><label class="field"><span>מספר זוגות</span><input id="wantedPairs" type="number" min="4" max="40" value="20" inputmode="numeric"></label></div><div class="muted">הזינו את פרטי השיעור פעם אחת. המקצוע, הכיתה והנושא ייכנסו אוטומטית לפרומפט.<br><br>את הזוגות מזינים בפורמט:<br><strong>מושג | התאמה</strong></div></div>'+
+ '<section class="card create-game-card" id="createGameSection"><div class="setup-mode-pill">'+(savedMode()==='run'?'DomiKnow Run':'DomiKnow Classic')+'</div><h2>יצירת משחק חדש</h2><div class="grid"><div><label class="field"><span>מקצוע</span><input id="subjectName" maxlength="60" placeholder="לדוגמה: ביולוגיה"></label><label class="field"><span>כיתה</span><input id="className" maxlength="60" placeholder="לדוגמה: ח׳2"></label><label class="field"><span>נושא</span><input id="topicName" maxlength="80" placeholder="לדוגמה: מערכת הנשימה"></label><label class="field"><span>מספר זוגות</span><input id="wantedPairs" type="number" min="4" max="40" value="20" inputmode="numeric"></label></div><div class="muted">הזינו את פרטי השיעור פעם אחת. המקצוע, הכיתה והנושא ייכנסו אוטומטית לפרומפט.<br><br>את הזוגות מזינים בפורמט:<br><strong>מושג | התאמה</strong></div></div>'+
  '<section class="prompt-helper"><div class="prompt-head"><div><strong>צריכים עזרה ביצירת הזוגות?</strong><span>ערכו את הפרומפט והעתיקו אותו לבינה המועדפת עליכם.</span></div><button class="btn ghost compact-btn" id="copyPrompt">העתקת פרומפט</button></div><textarea id="promptText" class="prompt-text">אני מורה ל__________ ומלמד/ת תלמידי כיתה ________ את הנושא: __________.\nצור עבורי מאגר של 20 זוגות למשחק דומינו לימודי.\n\nכל זוג צריך לכלול:\nמושג קצר | הגדרה / שאלה / תיאור שהתשובה עליו היא בדיוק אותו מושג\n\nהקפד על ניסוח קצר וברור, התאמה לגיל התלמידים, ללא כפילויות, ללא מושגים כמעט זהים, וללא כתיבת המושג עצמו בתוך ההגדרה.\nהמושג צריך להיות קצר ככל האפשר, רצוי עד 22 תווים. ההגדרה/התיאור צריכים להיות תמציתיים, רצוי עד 55 תווים. אם ניתן לקצר בלי לפגוע בדיוק — קצר.\n\nהחזר את התשובה בתוך בלוק קוד רגיל בלבד (plain text), ללא כותרת, ללא מספור, ללא bullets וללא טקסט לפני או אחרי בלוק הקוד.\n\nבתוך בלוק הקוד חייבות להיות בדיוק מספר השורות שביקשתי — שורה אחת לכל זוג.\nכל זוג נכתב בשורה אחת בלבד בפורמט:\nמושג | התאמה\n\nבסיום כל זוג לחץ Enter פעם אחת ועבור לשורה חדשה.\nאסור לכתוב שני זוגות באותה שורה ואסור להמשיך זוג חדש באותה שורה.\n\nדוגמה מדויקת למבנה הפלט בתוך בלוק הקוד:\nמיטוכונדריה | אברון שבו מתבצעת נשימה תאית\nריבוזום | אברון שבו מתבצע תרגום\nDNA | מולקולה הנושאת מידע תורשתי</textarea></section>'+ 
  '<div class="pairs-head"><div><strong>זוגות למשחק</strong><span>העתיקו את המאגר מהבינה. הכפתור למטה יטען אותו וייצור את המשחק.</span></div></div><label class="field pairs-field"><textarea id="pairs" placeholder="מיטוכונדריה | אברון שבו מתבצעת נשימה תאית\nריבוזום | אברון שבו מתבצע תרגום\nDNA | מולקולה הנושאת מידע תורשתי\n..."></textarea></label>'+
  '<div class="pair-help"><span class="count" id="pairCount">0 זוגות</span><span class="tiny">מינימום 4 · מקסימום 40 זוגות</span></div><div class="btns"><button class="btn pri combo-create" id="createGame">טעינת המאגר ויצירת משחק</button>'+(last?'<button class="btn ghost" id="resumeLast">חזרה למשחק האחרון</button>':'')+'</div><div id="homeFeedback" class="feedback"></div></section>'+
  '<section class="card how"><div><strong>1</strong><span>המורה מזין זוגות</span></div><div><strong>2</strong><span>התלמידים מקבלים קוביות</span></div><div><strong>3</strong><span>הכיתה בונה שרשרת</span></div></section></div>';
- document.getElementById('backHome').onclick=renderDesign;
+ document.getElementById('backHome').onclick=()=>savedMode()==='run'?renderGroups():renderMode;
  const ta=document.getElementById('pairs'),count=document.getElementById('pairCount'),btn=document.getElementById('createGame'),copyPrompt=document.getElementById('copyPrompt'),promptText=document.getElementById('promptText'),subjectName=document.getElementById('subjectName'),className=document.getElementById('className'),topicName=document.getElementById('topicName'),wantedPairs=document.getElementById('wantedPairs');
  const refresh=()=>{const n=parsePairs(ta.value).length,wanted=Math.max(4,Math.min(40,Number(wantedPairs.value)||20)),missing=Math.max(0,wanted-n);count.textContent=missing? n+' מתוך '+wanted+' זוגות · חסרים '+missing:n+' מתוך '+wanted+' זוגות ✓'};
  const syncPrompt=()=>{const subject=subjectName.value.trim()||'__________',klass=className.value.trim()||'__________',topic=topicName.value.trim()||'__________',wanted=Math.max(4,Math.min(40,Number(wantedPairs.value)||20));const lines=promptText.value.split('\n');lines[0]='אני מורה ל'+subject+' ומלמד/ת תלמידי כיתה '+klass+' את הנושא: '+topic+'.';lines[1]='צור עבורי מאגר של '+wanted+' זוגות למשחק דומינו לימודי.';promptText.value=lines.join('\n')};
