@@ -308,3 +308,167 @@ input:focus,textarea:focus{border-color:var(--teal);box-shadow:0 0 0 3px rgba(63
 .domino.compact .domino-half{font-weight:800}
 .my-tile .domino-half{font-weight:850}
 .projector .domino-half{font-weight:850}
+
+/* ===== DomiKnow Beach Palette =====
+   4-color system: soft navy, warm sand, shell, weathered blue-gray.
+*/
+:root{
+  --beach-navy:#35566F;
+  --beach-navy-deep:#1E3448;
+  --beach-sand:#C7B392;
+  --beach-shell:#E3D7C6;
+  --beach-bluegray:#81919A;
+  --beach-ivory:#F7F2E9;
+  --beach-paper:#FFFDF9;
+  --beach-line:#DDD3C5;
+  --ink:#1E3448;
+  --muted:#69747C;
+  --cream:var(--beach-ivory);
+  --paper:var(--beach-paper);
+  --navy:var(--beach-navy);
+  --wine:var(--beach-navy);
+  --teal:var(--beach-bluegray);
+  --plum:#7C6E72;
+  --honey:var(--beach-sand);
+  --purple:var(--beach-navy);
+  --purple2:#6D8292;
+  --mint:#C6D0D0;
+  --peach:#DDCDB6;
+  --danger:#8C5560;
+}
+html{background:var(--beach-ivory)}
+body:not(.landing){
+  background:
+    radial-gradient(circle at 8% 4%,rgba(129,145,154,.12),transparent 27%),
+    radial-gradient(circle at 94% 2%,rgba(199,179,146,.15),transparent 26%),
+    linear-gradient(180deg,#FCF9F4 0%,#F3ECE2 100%);
+}
+.hero{
+  background:linear-gradient(135deg,#FFFDF9 0%,#F3ECE2 100%);
+  color:var(--beach-navy-deep);
+  border-color:rgba(53,86,111,.10);
+}
+.hero h1{color:var(--beach-navy-deep)}
+.hero .eyebrow{color:var(--beach-navy)}
+.hero p{color:#66737C}
+.card{
+  background:rgba(255,253,249,.97);
+  border-color:rgba(53,86,111,.08);
+}
+h2{color:var(--beach-navy-deep)}
+input:focus,textarea:focus{
+  border-color:var(--beach-bluegray);
+  box-shadow:0 0 0 3px rgba(129,145,154,.14);
+}
+.pri,.combo-create{
+  background:linear-gradient(135deg,#35566F,#456A84);
+  color:#FFFDF8;
+  box-shadow:0 8px 18px rgba(53,86,111,.17);
+}
+.ghost{
+  background:#EEF1F1;
+  color:#35566F;
+}
+.count{
+  background:#F0E9DF;
+  color:#6C5D4A;
+}
+.how strong{
+  background:#EEF1F1;
+  color:#486273;
+}
+.progress{background:#EAE4DA}
+.progress span{
+  background:linear-gradient(90deg,#35566F,#81919A,#C7B392);
+}
+.open-clue{
+  background:linear-gradient(135deg,#F7F2EA,#EEF1F1);
+  border-color:#DED6CB;
+  color:#1E3448;
+}
+.code{color:#35566F}
+.chip{
+  background:#EEF1F1;
+  border-color:#DCE3E4;
+  color:#405B6C;
+}
+
+/* Exactly four domino colors */
+.domino{
+  border-color:rgba(30,52,72,.16);
+  box-shadow:0 8px 20px rgba(30,52,72,.10);
+}
+.domino-half{
+  font-weight:800;
+  text-shadow:none;
+}
+.domino-half.dc-0{
+  background:#35566F;
+  color:#FFFDF8;
+  text-shadow:0 1px 2px rgba(0,0,0,.20);
+}
+.domino-half.dc-1{
+  background:#C7B392;
+  color:#1E3448;
+}
+.domino-half.dc-2{
+  background:#E3D7C6;
+  color:#1E3448;
+}
+.domino-half.dc-3{
+  background:#81919A;
+  color:#152B3D;
+}
+/* fallback for old saved games that still contain color index 4 */
+.domino-half.dc-4{
+  background:#C7B392;
+  color:#1E3448;
+  text-shadow:none;
+}
+.domino-half+.domino-half{
+  border-right:1px solid rgba(255,255,255,.62);
+}
+.connector{color:#9A8468}
+
+/* Calmer timing + success surfaces */
+.turn-timer{
+  background:#F1EEE8;
+  color:#486273;
+  border-color:#DED6CA;
+}
+.turn-timer strong{color:#35566F}
+.turn-timer.warning{
+  background:linear-gradient(135deg,#FFF8EB,#F2E8D8);
+  color:#6C5841;
+  border-color:#D7B98A;
+}
+.turn-timer.warning strong{color:#35566F}
+.success-link{
+  background:#E8ECEC;
+  color:#35566F;
+}
+.success-moment{
+  border-color:rgba(53,86,111,.18);
+}
+.success-moment strong{color:#35566F}
+.complete{
+  background:linear-gradient(135deg,#F3ECE2,#EEF1F1 58%,#F6F1E8);
+  border-color:rgba(53,86,111,.12);
+}
+.complete-mark{
+  background:#35566F;
+  box-shadow:0 8px 20px rgba(53,86,111,.16);
+}
+.complete strong{color:#1E3448}
+.last-player{
+  background:#EEF1F1;
+  color:#405B6C;
+  border-color:#DCE3E4;
+}
+.create-game-card{
+  border-top-color:rgba(53,86,111,.65);
+}
+.feedback.ok{color:#46666F}
+.match-action .pri{
+  box-shadow:0 10px 24px rgba(53,86,111,.18);
+}
