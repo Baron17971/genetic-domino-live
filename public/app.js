@@ -145,7 +145,7 @@ async function renderStudent(){
  if(!d.myTile&&d.phase!=='complete'){root.innerHTML='<div class="shell student-shell">'+hero('את/ה צופה בסבב הזה.',d.title)+'<section class="card waiting">אין לך כרגע קובייה. עקבו אחרי השרשרת על המקרן.</section></div>';startPoll(async()=>{try{const n=await get({playerId:pid});if(n.phase!==d.phase||!!n.myTile!==!!d.myTile)stableRerender(renderStudent)}catch{}});return}
  if(d.phase==='complete'){root.innerHTML='<div class="shell student-shell">'+hero('השרשרת הושלמה!',d.title)+'<section class="card">'+complete()+'</section></div>';return}
  root.innerHTML='<div class="shell student-shell">'+hero('בדקו האם הצד הימני שלכם מתאים למה שפתוח עכשיו.',d.title)+'<section class="card"><div class="open-clue" id="studentClue"><span>ההתאמה הפתוחה</span><b id="studentClueText">'+esc(d.currentClue)+'</b></div><div class="turn-timer student-turn-timer" id="studentTurn"></div><div class="my-tile" id="studentTile">'+tile(d.myTile)+'</div><div class="match-action"><button class="btn pri" id="playTile">זה מתאים — חיבור הקובייה</button><div class="feedback" id="playFeedback"></div></div></section></div>';
- document.getElementById('playTile').onclick=async()=>{const b=document.getElementById('playTile'),f=document.getElementById('playFeedback');b.disabled=true;const sx=window.scrollX,sy=window.scrollY;try{const x=await post({action:'play',playerId:pid});if(x.correct){playSuccessSound();showSuccessMoment('התאמה נכונה');f.className='feedback ok';f.textContent='הקובייה התחברה לשרשרת ✓';b.textContent='הקובייה חוברה ✓';requestAnimationFrame(()=>window.scrollTo(sx,sy));setTimeout(async()=>{try{const n=await get({playerId:pid});const oldTile=d.myTile?.id||null,newTile=n.myTile?.id||null;if(n.phase!==d.phase||oldTile!==newTile){stableRerender(renderStudent);return}d.currentClue=n.currentClue;d.turnStartedAt=n.turnStartedAt;d.timeoutCount=n.timeoutCount;d.version=n.version;updateTurnTimer(n,'studentTurn');const clue=document.getElementById('studentClueText');if(clue)clue.textContent=n.currentClue||'';requestAnimationFrame(()=>window.scrollTo(sx,sy))}catch{}},900)}else{f.className='feedback bad';f.textContent='עדיין לא — חפשו התאמה מדויקת.';b.disabled=false;requestAnimationFrame(()=>window.scrollTo(sx,sy))}}catch{b.disabled=false;requestAnimationFrame(()=>window.scrollTo(sx,sy))}};
+ document.getElementById('playTile').onclick=async()=>{const b=document.getElementById('playTile'),f=document.getElementById('playFeedback');b.disabled=true;const sx=window.scrollX,sy=window.scrollY;try{const x=await post({action:'play',playerId:pid});if(x.correct){playSuccessSound();showSuccessMoment('התאמה נכונה');f.className='feedback ok';f.textContent='הקובייה התחברה לשרשרת ✓';b.textContent='הקובייה חוברה ✓';requestAnimationFrame(()=>window.scrollTo(sx,sy));setTimeout(async()=>{try{const n=await get({playerId:pid});if(n.phase!==d.phase){stableRerender(renderStudent);return}const oldTile=d.myTile?.id||null,newTile=n.myTile?.id||null;d.currentClue=n.currentClue;d.turnStartedAt=n.turnStartedAt;d.timeoutCount=n.timeoutCount;d.version=n.version;updateTurnTimer(n,'studentTurn');const clue=document.getElementById('studentClueText');if(clue)clue.textContent=n.currentClue||'';if(oldTile!==newTile&&n.myTile){const tileBox=document.getElementById('studentTile');if(tileBox)tileBox.innerHTML=tile(n.myTile);d.myTile=n.myTile;const play=document.getElementById('playTile');if(play){play.textContent='זה מתאים — חיבור הקובייה';play.disabled=false}const feed=document.getElementById('playFeedback');if(feed){feed.className='feedback';feed.textContent=''}fitDominoText()}requestAnimationFrame(()=>window.scrollTo(sx,sy))}catch{}},900)}else{f.className='feedback bad';f.textContent='עדיין לא — חפשו התאמה מדויקת.';b.disabled=false;requestAnimationFrame(()=>window.scrollTo(sx,sy))}}catch{b.disabled=false;requestAnimationFrame(()=>window.scrollTo(sx,sy))}};
  fitDominoText();updateTurnTimer(d,'studentTurn');startPoll(async()=>{try{
   const n=await get({playerId:pid});
   if(n.phase!==d.phase){stableRerender(renderStudent);return}
@@ -154,7 +154,24 @@ async function renderStudent(){
     const clue=document.getElementById('studentClueText');
     if(clue&&n.currentClue!==d.currentClue)clue.textContent=n.currentClue||'';
     const oldTile=d.myTile?.id||null,newTile=n.myTile?.id||null;
-    if(oldTile!==newTile){stableRerender(renderStudent);return}
+    if(oldTile!==newTile){
+      if(n.myTile){
+        const tileBox=document.getElementById('studentTile');
+        if(tileBox)tileBox.innerHTML=tile(n.myTile);
+        d.myTile=n.myTile;
+        const play=document.getElementById('playTile');
+        if(play){play.textContent='זה מתאים — חיבור הקובייה';play.disabled=false}
+        const feed=document.getElementById('playFeedback');
+        if(feed){feed.className='feedback';feed.textContent=''}
+        fitDominoText();
+      }else{
+        const tileBox=document.getElementById('studentTile');
+        if(tileBox)tileBox.innerHTML='<div class="waiting">אין לך כרגע קובייה. עקבו אחרי השרשרת על המקרן.</div>';
+        const play=document.getElementById('playTile');
+        if(play){play.disabled=true;play.textContent='ממתינים לקובייה'}
+        d.myTile=null;
+      }
+    }
     d.currentClue=n.currentClue;
     d.turnStartedAt=n.turnStartedAt;
     d.timeoutCount=n.timeoutCount;
