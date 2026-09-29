@@ -587,3 +587,31 @@ input:focus,textarea:focus{
 .projector-clue{
   color:#FFFDF8;
 }
+
+/* Prevent layout shift when branded banner is re-rendered */
+.hero.hero-image{
+  aspect-ratio:16 / 9;
+  contain:layout paint;
+}
+.hero.hero-image picture{
+  display:block;
+  width:100%;
+  height:100%;
+}
+.hero.hero-image img{
+  display:block;
+  width:100%;
+  height:100%;
+  object-fit:cover;
+}
+@media(min-width:761px){
+  .hero.hero-image{
+    aspect-ratio:3 / 1;
+  }
+  .hero.hero-image img{
+    height:100%;
+    max-height:none;
+    object-fit:cover;
+    object-position:center;
+  }
+}
