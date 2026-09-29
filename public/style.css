@@ -1059,3 +1059,74 @@ html[data-domino-pattern="ribbons"] .design-preview .domino-half{
 html[data-domino-pattern="hearts"] .design-preview .domino-half{
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 260 130'%3E%3Cg fill='none' stroke='%23ffffff' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M31 25 C24 17 11 20 11 31 C11 42 31 53 31 53 C31 53 51 42 51 31 C51 20 38 17 31 25 Z' stroke-opacity='.26' stroke-width='2.2'/%3E%3Cpath d='M224 29 C219 23 209 25 209 33 C209 41 224 49 224 49 C224 49 239 41 239 33 C239 25 229 23 224 29 Z' stroke-opacity='.20' stroke-width='2'/%3E%3Cpath d='M212 104 C208 99 200 101 200 107 C200 113 212 120 212 120 C212 120 224 113 224 107 C224 101 216 99 212 104 Z' stroke-opacity='.16' stroke-width='1.8'/%3E%3C/g%3E%3C/svg%3E");
 }
+
+
+/* v33 — uploaded artwork as subtle integrated domino overlays */
+.design-pattern.pattern-leaves .pattern-demo,
+.design-pattern.pattern-ribbons .pattern-demo,
+.design-pattern.pattern-hearts .pattern-demo,
+.design-pattern.pattern-flowers .pattern-demo,
+.design-pattern.pattern-sparkles .pattern-demo{
+  background-repeat:no-repeat !important;
+  background-size:cover !important;
+  background-position:center !important;
+}
+.design-pattern.pattern-leaves .pattern-demo{background-image:url('/domino-patterns/leaves%20.png') !important}
+.design-pattern.pattern-ribbons .pattern-demo{background-image:url('/domino-patterns/ribons.png') !important}
+.design-pattern.pattern-hearts .pattern-demo{background-image:url('/domino-patterns/heart.png') !important}
+.design-pattern.pattern-flowers .pattern-demo{background-image:url('/domino-patterns/flower.png') !important}
+.design-pattern.pattern-sparkles .pattern-demo{background-image:url('/domino-patterns/Sparks.png') !important}
+
+html[data-domino-pattern="leaves"] .domino-half,
+html[data-domino-pattern="ribbons"] .domino-half,
+html[data-domino-pattern="hearts"] .domino-half,
+html[data-domino-pattern="flowers"] .domino-half,
+html[data-domino-pattern="sparkles"] .domino-half{
+  background-image:none !important;
+  overflow:hidden;
+}
+html[data-domino-pattern="leaves"] .domino-half::before,
+html[data-domino-pattern="ribbons"] .domino-half::before,
+html[data-domino-pattern="hearts"] .domino-half::before,
+html[data-domino-pattern="flowers"] .domino-half::before,
+html[data-domino-pattern="sparkles"] .domino-half::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  background-repeat:no-repeat;
+  background-size:cover;
+  background-position:center;
+  pointer-events:none;
+  z-index:0;
+}
+html[data-domino-pattern="leaves"] .domino-half::before{
+  background-image:url('/domino-patterns/leaves%20.png');
+  opacity:.20;
+}
+html[data-domino-pattern="ribbons"] .domino-half::before{
+  background-image:url('/domino-patterns/ribons.png');
+  opacity:.16;
+}
+html[data-domino-pattern="hearts"] .domino-half::before{
+  background-image:url('/domino-patterns/heart.png');
+  opacity:.15;
+}
+html[data-domino-pattern="flowers"] .domino-half::before{
+  background-image:url('/domino-patterns/flower.png');
+  opacity:.13;
+}
+html[data-domino-pattern="sparkles"] .domino-half::before{
+  background-image:url('/domino-patterns/Sparks.png');
+  opacity:.14;
+}
+.domino-half-text{
+  position:relative;
+  z-index:1;
+}
+
+/* A little stronger in the teacher preview so the choice is visible */
+html[data-domino-pattern="leaves"] .design-preview .domino-half::before{opacity:.30}
+html[data-domino-pattern="ribbons"] .design-preview .domino-half::before{opacity:.25}
+html[data-domino-pattern="hearts"] .design-preview .domino-half::before{opacity:.24}
+html[data-domino-pattern="flowers"] .design-preview .domino-half::before{opacity:.22}
+html[data-domino-pattern="sparkles"] .design-preview .domino-half::before{opacity:.24}
