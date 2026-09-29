@@ -81,7 +81,8 @@ const patterns=[
  {id:'leaves',name:'עלים'},
  {id:'flowers',name:'פרחים'},
  {id:'hearts',name:'לבבות'},
- {id:'ribbons',name:'סרטים'}
+ {id:'ribbons',name:'סרטים'},
+ {id:'sparkles',name:'ניצוצות'}
 ];
 const patternIds=new Set(patterns.map(p=>p.id));
 function savedDesign(){try{const d=JSON.parse(sessionStorage.getItem(DESIGN_KEY)||'')||{};return{palette:d.palette||'beach',pattern:patternIds.has(d.pattern)?d.pattern:'leaves'}}catch{return{palette:'beach',pattern:'leaves'}}}
