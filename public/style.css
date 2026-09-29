@@ -1362,3 +1362,11 @@ html[data-domino-pattern="none"] .domino-half::before,
 html[data-domino-pattern="none"] .domino-half::after{
   display:none !important;
 }
+
+
+/* v44 — keep all six pattern choices in a clean 2-column mobile grid */
+@media(max-width:760px){
+  .pattern-grid .design-pattern:last-child{
+    grid-column:auto !important;
+  }
+}
