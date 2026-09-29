@@ -190,10 +190,10 @@ function renderSetup(){
  if(last)document.getElementById('resumeLast').onclick=()=>location.href=last;
 }
 
-function runProgressCard(team,livePlayers=[]){
+function runProgressCard(team,livePlayers=[],winnerTeamId=''){
  const roster=(livePlayers||[]).filter(p=>p.groupId===team.id);
- const done=Number(team.chainCount||0),total=Number(team.total||0),pct=total?Math.round(done/total*100):0;
- return '<section class="run-team-card"><div class="run-team-head"><div><span class="run-team-label">קבוצה</span><h3>'+esc(team.name)+'</h3></div><strong>'+done+' / '+total+'</strong></div><div class="run-progress"><span style="width:'+pct+'%"></span></div><div class="run-team-roster">'+(roster.length?roster.map(p=>'<span class="chip">'+esc(p.name)+'</span>').join(''):'<span class="muted">עדיין אין תלמידים בקבוצה.</span>')+'</div></section>';
+ const done=Number(team.chainCount||0),total=Number(team.total||0),pct=total?Math.round(done/total*100):0,isWinner=winnerTeamId===team.id,isDone=team.phase==='complete';
+ return '<section class="run-team-card '+(isDone?'complete ':'')+(isWinner?'winner':'')+'" data-run-team="'+esc(team.id)+'"><div class="run-team-head"><div><span class="run-team-label">'+(isWinner?'🏁 ראשונה לסיים':isDone?'✓ הושלמה':'קבוצה')+'</span><h3>'+esc(team.name)+'</h3></div><div class="run-score"><strong data-run-done>'+done+'</strong><span>מתוך</span><b data-run-total>'+total+'</b></div></div><div class="run-progress"><span data-run-bar style="width:'+pct+'%"></span></div><div class="run-progress-caption"><strong data-run-caption>'+pct+'%</strong><span>'+(isDone?'כל המושגים חוברו':'ממשיכים לחבר…')+'</span></div><div class="run-team-roster">'+(roster.length?roster.map(p=>'<span class="chip">'+esc(p.name)+'</span>').join(''):'<span class="muted">עדיין אין תלמידים בקבוצה.</span>')+'</div></section>';
 }
 function runLobbyCard(group,players=[]){
  const roster=(players||[]).filter(p=>p.groupId===group.id);
@@ -204,8 +204,8 @@ async function renderRunTeacher(d){
  const empty=groups.filter(g=>!players.some(p=>p.groupId===g.id));
  root.innerHTML='<div class="shell run-teacher-shell">'+hero(d.className?'DomiKnow Run · '+d.className:'DomiKnow Run',d.title)+
  '<section class="card"><div class="teacher-top"><div><div class="status"><span class="dot '+(d.phase==='playing'?'on':'')+'"></span>'+(d.phase==='lobby'?'ממתינים לקבוצות':d.phase==='playing'?'המרוץ פעיל':'המרוץ הושלם')+'</div><h2>קוד כיתה</h2><div class="code">'+esc(code)+'</div></div><div class="joinbox"><div class="qr"><img alt="QR למשחק" src="/api/qr?text='+encodeURIComponent(joinUrl())+'"></div><div><strong>כניסת תלמידים</strong><div class="linkbox">'+esc(joinUrl())+'</div><div class="btns"><button class="btn ghost" id="copyJoin">העתקת קישור</button><button class="btn ghost" id="openProjector">פתיחת מקרן</button></div></div></div></div></section>'+
- '<section class="card run-board"><div class="run-board-title"><div><span class="setup-mode-pill">DomiKnow Run</span><h2>'+(d.phase==='lobby'?'הקבוצות מוכנות למרוץ':'התקדמות הקבוצות')+'</h2></div>'+(d.winnerTeamName?'<div class="run-winner">🏁 '+esc(d.winnerTeamName)+' סיימה ראשונה</div>':'')+'</div><div class="run-team-grid">'+
- (d.phase==='lobby'?groups.map(g=>runLobbyCard(g,players)).join(''):teams.map(t=>runProgressCard(t,players)).join(''))+
+ '<section class="card run-board"><div class="run-board-title"><div><span class="setup-mode-pill">DomiKnow Run</span><h2>'+(d.phase==='lobby'?'הקבוצות מוכנות למרוץ':'התקדמות הקבוצות')+'</h2></div>'+'<div class="run-winner '+(d.winnerTeamName?'show':'')+'" id="runWinner">'+(d.winnerTeamName?'🏁 '+esc(d.winnerTeamName)+' — סיימה ראשונה!':'')+'</div></div><div class="run-team-grid">'+
+ (d.phase==='lobby'?groups.map(g=>runLobbyCard(g,players)).join(''):teams.map(t=>runProgressCard(t,players,d.winnerTeamId||'')).join(''))+
  '</div><div class="btns">'+(d.phase==='lobby'?'<button class="btn pri" id="startGame" '+(empty.length?'disabled':'')+'>התחלת המרוץ</button>':'<button class="btn danger" id="resetGame">איפוס המרוץ</button>')+'<button class="btn ghost" id="newRoster">ניקוי תלמידים</button></div>'+
  (empty.length?'<div class="feedback bad">כדי להתחיל, צריך לפחות תלמיד אחד בכל קבוצה.</div>':'')+'</section></div>';
  document.getElementById('copyJoin').onclick=async()=>{try{await navigator.clipboard.writeText(joinUrl());toast('הקישור הועתק')}catch{}};
@@ -214,9 +214,31 @@ async function renderRunTeacher(d){
  const r=document.getElementById('resetGame');if(r)r.onclick=async()=>{if(confirm('לאפס את המרוץ ולחזור ללובי?')){await post({action:'reset',teacherToken:token});renderTeacher()}};
  document.getElementById('newRoster').onclick=async()=>{if(confirm('למחוק את רשימת התלמידים ולפתוח לובי חדש?')){await post({action:'newRoster',teacherToken:token});renderTeacher()}};
  startPoll(async()=>{try{
-   const n=await get({teacherToken:token});
-   if(n.phase==='playing'){try{await post({action:'tick',teacherToken:token})}catch{}}
-   if(n.version!==d.version)stableRerender(renderTeacher);
+   let n=await get({teacherToken:token});
+   if(n.phase==='playing'){try{const tick=await post({action:'tick',teacherToken:token});if(tick.rotated)n=await get({teacherToken:token})}catch{}}
+   if(n.phase!==d.phase){stableRerender(renderTeacher);return}
+   if(n.phase==='lobby'){
+     if(n.version!==d.version)stableRerender(renderTeacher);
+     return;
+   }
+   (n.runTeams||[]).forEach(team=>{
+     const card=document.querySelector('[data-run-team="'+CSS.escape(team.id)+'"]');if(!card)return;
+     const done=Number(team.chainCount||0),total=Number(team.total||0),pct=total?Math.round(done/total*100):0;
+     card.querySelector('[data-run-done]')?.replaceChildren(document.createTextNode(String(done)));
+     card.querySelector('[data-run-total]')?.replaceChildren(document.createTextNode(String(total)));
+     const bar=card.querySelector('[data-run-bar]');if(bar)bar.style.width=pct+'%';
+     card.querySelector('[data-run-caption]')?.replaceChildren(document.createTextNode(pct+'%'));
+     card.classList.toggle('complete',team.phase==='complete');
+     card.classList.toggle('winner',n.winnerTeamId===team.id);
+     const label=card.querySelector('.run-team-label');if(label)label.textContent=n.winnerTeamId===team.id?'🏁 ראשונה לסיים':team.phase==='complete'?'✓ הושלמה':'קבוצה';
+     const cap=card.querySelector('.run-progress-caption span');if(cap)cap.textContent=team.phase==='complete'?'כל המושגים חוברו':'ממשיכים לחבר…';
+   });
+   const winner=document.getElementById('runWinner');
+   if(winner){
+     const has=Boolean(n.winnerTeamName);winner.classList.toggle('show',has);
+     winner.textContent=has?'🏁 '+n.winnerTeamName+' — סיימה ראשונה!':'';
+   }
+   d.version=n.version;d.runTeams=n.runTeams;d.winnerTeamId=n.winnerTeamId;d.winnerTeamName=n.winnerTeamName;
  }catch{}});
 }
 function runJoinForm(saved,d){
@@ -243,7 +265,7 @@ async function renderRunStudent(d,saved){
  }
  const pct=d.teamTotal?Math.round((d.teamChainCount||0)/d.teamTotal*100):0;
  root.innerHTML='<div class="shell student-shell">'+hero('הקובייה של הקבוצה שלך','DomiKnow Run')+
- '<section class="card run-student-card"><div class="run-student-head"><span class="setup-mode-pill">'+esc(d.teamName||'הקבוצה שלי')+'</span><strong id="runStudentProgress">'+Number(d.teamChainCount||0)+' / '+Number(d.teamTotal||0)+' חוברו</strong></div><div class="run-progress"><span id="runStudentBar" style="width:'+pct+'%"></span></div><div class="open-clue" id="studentClue"><span>ההתאמה הפתוחה של הקבוצה</span><b id="studentClueText">'+esc(d.currentClue||'')+'</b></div><div class="my-tile" id="studentTile">'+tile(d.myTile)+'</div><div class="match-action"><button class="btn pri" id="playTile">זה מתאים — חיבור הקובייה</button><div class="feedback" id="playFeedback"></div></div></section></div>';
+ '<section class="card run-student-card"><div class="run-student-head"><span class="setup-mode-pill">'+esc(d.teamName||'הקבוצה שלי')+'</span><strong id="runStudentProgress">'+Number(d.teamChainCount||0)+' מתוך '+Number(d.teamTotal||0)+' חוברו</strong></div><div class="run-progress"><span id="runStudentBar" style="width:'+pct+'%"></span></div><div class="open-clue" id="studentClue"><span>ההתאמה הפתוחה של הקבוצה</span><b id="studentClueText">'+esc(d.currentClue||'')+'</b></div><div class="my-tile" id="studentTile">'+tile(d.myTile)+'</div><div class="match-action"><button class="btn pri" id="playTile">זה מתאים — חיבור הקובייה</button><div class="feedback" id="playFeedback"></div></div></section></div>';
  document.getElementById('playTile').onclick=async()=>{const b=document.getElementById('playTile'),f=document.getElementById('playFeedback');b.disabled=true;try{const x=await post({action:'play',playerId:pid});if(x.correct){playSuccessSound();showSuccessMoment('התאמה נכונה');f.className='feedback ok';f.textContent='הקובייה התחברה לקבוצה ✓';setTimeout(()=>stableRerender(renderStudent),650)}else{f.className='feedback bad';f.textContent='עדיין לא — זו לא ההתאמה הפתוחה.';b.disabled=false}}catch{b.disabled=false}};
  fitDominoText();
  startPoll(async()=>{try{
@@ -252,7 +274,7 @@ async function renderRunStudent(d,saved){
    const oldTile=d.myTile?.id||null,newTile=n.myTile?.id||null;
    if(oldTile!==newTile){stableRerender(renderStudent);return}
    const clue=document.getElementById('studentClueText');if(clue)clue.textContent=n.currentClue||'';
-   const prog=document.getElementById('runStudentProgress');if(prog)prog.textContent=Number(n.teamChainCount||0)+' / '+Number(n.teamTotal||0)+' חוברו';
+   const prog=document.getElementById('runStudentProgress');if(prog)prog.textContent=Number(n.teamChainCount||0)+' מתוך '+Number(n.teamTotal||0)+' חוברו';
    const bar=document.getElementById('runStudentBar');if(bar)bar.style.width=(n.teamTotal?Math.round((n.teamChainCount||0)/n.teamTotal*100):0)+'%';
    d.currentClue=n.currentClue;d.teamChainCount=n.teamChainCount;d.version=n.version;
  }catch{}});
