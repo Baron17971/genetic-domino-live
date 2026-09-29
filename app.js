@@ -125,9 +125,25 @@ async function renderStudent(){
  if(d.phase==='lobby'){root.innerHTML='<div class="shell student-shell">'+hero('הצטרפת. מחכים שהמורה יתחיל.',d.title)+'<section class="card waiting">את/ה בלובי ✓</section></div>';startPoll(renderStudent);return}
  if(!d.myTile&&d.phase!=='complete'){root.innerHTML='<div class="shell student-shell">'+hero('את/ה צופה בסבב הזה.',d.title)+'<section class="card waiting">אין לך כרגע קובייה. עקבו אחרי השרשרת על המקרן.</section></div>';startPoll(renderStudent);return}
  if(d.phase==='complete'){root.innerHTML='<div class="shell student-shell">'+hero('השרשרת הושלמה!',d.title)+'<section class="card">'+complete()+'</section></div>';return}
- root.innerHTML='<div class="shell student-shell">'+hero('בדקו האם הצד הימני שלכם מתאים למה שפתוח עכשיו.',d.title)+'<section class="card"><div class="open-clue"><span>ההתאמה הפתוחה</span>'+esc(d.currentClue)+'</div><div class="turn-timer student-turn-timer" id="studentTurn"></div><div class="my-tile">'+tile(d.myTile)+'</div><div class="match-action"><button class="btn pri" id="playTile">זה מתאים — חיבור הקובייה</button><div class="feedback" id="playFeedback"></div></div></section></div>';
+ root.innerHTML='<div class="shell student-shell">'+hero('בדקו האם הצד הימני שלכם מתאים למה שפתוח עכשיו.',d.title)+'<section class="card"><div class="open-clue" id="studentClue"><span>ההתאמה הפתוחה</span><b id="studentClueText">'+esc(d.currentClue)+'</b></div><div class="turn-timer student-turn-timer" id="studentTurn"></div><div class="my-tile" id="studentTile">'+tile(d.myTile)+'</div><div class="match-action"><button class="btn pri" id="playTile">זה מתאים — חיבור הקובייה</button><div class="feedback" id="playFeedback"></div></div></section></div>';
  document.getElementById('playTile').onclick=async()=>{const b=document.getElementById('playTile'),f=document.getElementById('playFeedback');b.disabled=true;try{const x=await post({action:'play',playerId:pid});if(x.correct){playSuccessSound();showSuccessMoment('התאמה נכונה');f.className='feedback ok';f.textContent='הקובייה התחברה לשרשרת ✓';setTimeout(renderStudent,900)}else{f.className='feedback bad';f.textContent='עדיין לא — חפשו התאמה מדויקת.';b.disabled=false}}catch{b.disabled=false}};
- updateTurnTimer(d,'studentTurn');startPoll(async()=>{try{const n=await get({playerId:pid});updateTurnTimer(n,'studentTurn');if(n.version!==d.version)renderStudent()}catch{}});
+ updateTurnTimer(d,'studentTurn');startPoll(async()=>{try{
+  const n=await get({playerId:pid});
+  if(n.phase!==d.phase){renderStudent();return}
+  if(n.phase==='playing'){
+    updateTurnTimer(n,'studentTurn');
+    const clue=document.getElementById('studentClueText');
+    if(clue&&n.currentClue!==d.currentClue)clue.textContent=n.currentClue||'';
+    const oldTile=d.myTile?.id||null,newTile=n.myTile?.id||null;
+    if(oldTile!==newTile){renderStudent();return}
+    d.currentClue=n.currentClue;
+    d.turnStartedAt=n.turnStartedAt;
+    d.timeoutCount=n.timeoutCount;
+    d.version=n.version;
+    return;
+  }
+  if(n.version!==d.version)renderStudent();
+ }catch{}});
  }catch{root.innerHTML='<div class="shell student-shell">'+hero()+'<section class="card"><h2>המשחק לא נמצא</h2></section></div>'}
 }
 if(path.startsWith('/teacher'))renderTeacher();else if(path.startsWith('/projector'))renderProjector();else if(path.startsWith('/join'))renderStudent();else renderHome();
