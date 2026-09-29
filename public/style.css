@@ -623,3 +623,7 @@ input:focus,textarea:focus{
 @media(max-width:760px){
   .turn-timer{min-height:78px}
 }
+
+
+/* Keep live lobby DOM updates from triggering browser scroll anchoring. */
+html,body,#dominoApp,.shell,.card,.roster{overflow-anchor:none}
