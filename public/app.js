@@ -77,16 +77,16 @@ const palettes=[
  {id:'earth',name:'אדמה',colors:['#4E5B43','#8A6C3D','#A98E66','#6F7C63']}
 ];
 const patterns=[
- {id:'circles',name:'עיגולים'},
  {id:'leaves',name:'עלים'},
  {id:'ribbons',name:'סרטים'},
  {id:'hearts',name:'לבבות'},
- {id:'softcorners',name:'פינות רכות'}
+ {id:'flowers',name:'פרחים'},
+ {id:'sparkles',name:'ניצוצות'}
 ];
 const patternIds=new Set(patterns.map(p=>p.id));
-function savedDesign(){try{const d=JSON.parse(sessionStorage.getItem(DESIGN_KEY)||'')||{};return{palette:d.palette||'beach',pattern:patternIds.has(d.pattern)?d.pattern:'circles'}}catch{return{palette:'beach',pattern:'circles'}}}
+function savedDesign(){try{const d=JSON.parse(sessionStorage.getItem(DESIGN_KEY)||'')||{};return{palette:d.palette||'beach',pattern:patternIds.has(d.pattern)?d.pattern:'leaves'}}catch{return{palette:'beach',pattern:'leaves'}}}
 function saveDesign(d){sessionStorage.setItem(DESIGN_KEY,JSON.stringify(d));applyDesign(d)}
-function applyDesign(d={}){const p=d.palette||'beach',x=d.pattern||'circles';document.documentElement.dataset.dominoPalette=p;document.documentElement.dataset.dominoPattern=x}
+function applyDesign(d={}){const p=d.palette||'beach',x=d.pattern||'leaves';document.documentElement.dataset.dominoPalette=p;document.documentElement.dataset.dominoPattern=x}
 function renderDesign(){
  clearInterval(timer);document.body.classList.remove('projector','landing');
  let design=savedDesign();applyDesign(design);
