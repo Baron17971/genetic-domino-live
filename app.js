@@ -31,16 +31,20 @@ function chainHtml(list){if(!list?.length)return '<div class="waiting">השרש�
 function progress(n,total){const p=total?Math.round(n/total*100):0;return '<div class="progress"><span style="width:'+p+'%"></span></div><div class="tiny progress-label">'+n+'/'+total+' קוביות</div>'}
 function complete(){return '<div class="complete"><strong>השרשרת הושלמה ✓</strong><span>כל ההתאמות התחברו.</span></div>'}
 function startPoll(fn){clearInterval(timer);timer=setInterval(fn,1100)}
+let successAudioCtx=null;
+function unlockSuccessAudio(){
+ try{const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;if(!successAudioCtx)successAudioCtx=new AC();if(successAudioCtx.state==='suspended')successAudioCtx.resume().catch(()=>{})}catch{}
+}
+window.addEventListener('pointerdown',unlockSuccessAudio,{passive:true});
+window.addEventListener('keydown',unlockSuccessAudio,{passive:true});
 function playSuccessSound(){
  try{
-  const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;
-  const ctx=new AC(),now=ctx.currentTime;
-  [[523.25,0],[659.25,.10],[783.99,.20]].forEach(([freq,delay],i)=>{
+  unlockSuccessAudio();const ctx=successAudioCtx;if(!ctx||ctx.state!=='running')return;const now=ctx.currentTime;
+  [[523.25,0],[659.25,.10],[783.99,.20]].forEach(([freq,delay])=>{
    const o=ctx.createOscillator(),g=ctx.createGain();o.type='sine';o.frequency.value=freq;
    g.gain.setValueAtTime(.0001,now+delay);g.gain.exponentialRampToValueAtTime(.18,now+delay+.015);g.gain.exponentialRampToValueAtTime(.0001,now+delay+.18);
    o.connect(g);g.connect(ctx.destination);o.start(now+delay);o.stop(now+delay+.2);
   });
-  setTimeout(()=>ctx.close().catch(()=>{}),700);
  }catch{}
 }
 function turnTiming(d){
@@ -98,7 +102,7 @@ async function renderTeacher(){
  const s=document.getElementById('startGame');if(s)s.onclick=async()=>{s.disabled=true;try{await post({action:'start',teacherToken:token});renderTeacher()}catch(e){toast(e.code==='no_players'?'אין עדיין תלמידים':'לא ניתן להתחיל');s.disabled=false}};
  const r=document.getElementById('resetGame');if(r)r.onclick=async()=>{if(confirm('לאפס את השרשרת ולחלק מחדש?')){await post({action:'reset',teacherToken:token});renderTeacher()}};
  document.getElementById('newRoster').onclick=async()=>{if(confirm('למחוק את רשימת התלמידים ולפתוח לובי חדש?')){await post({action:'newRoster',teacherToken:token});renderTeacher()}};
- updateTurnTimer(d);startPoll(async()=>{try{const n=await get({teacherToken:token});updateTurnTimer(n);if(turnTiming(n).rotate){const x=await post({action:'tick',teacherToken:token});if(x.rotated){renderTeacher();return}}if(n.version!==d.version||n.players.length!==players.length)renderTeacher()}catch{}});
+ updateTurnTimer(d);startPoll(async()=>{try{const n=await get({teacherToken:token});updateTurnTimer(n);if(n.chainCount>d.chainCount)playSuccessSound();if(turnTiming(n).rotate){const x=await post({action:'tick',teacherToken:token});if(x.rotated){renderTeacher();return}}if(n.version!==d.version||n.players.length!==players.length)renderTeacher()}catch{}});
  }catch{root.innerHTML='<div class="shell">'+hero()+'<section class="card"><h2>לא ניתן לפתוח את מסך המורה</h2><a class="btn pri linkbtn" href="/">פתיחת משחק חדש</a></section></div>'}
 }
 async function renderProjector(){
