@@ -1130,3 +1130,61 @@ html[data-domino-pattern="ribbons"] .design-preview .domino-half::before{opacity
 html[data-domino-pattern="hearts"] .design-preview .domino-half::before{opacity:.24}
 html[data-domino-pattern="flowers"] .design-preview .domino-half::before{opacity:.22}
 html[data-domino-pattern="sparkles"] .design-preview .domino-half::before{opacity:.24}
+
+
+/* v34 — span uploaded artwork once across the FULL domino, not separately in each half */
+html[data-domino-pattern="leaves"] .domino-half,
+html[data-domino-pattern="ribbons"] .domino-half,
+html[data-domino-pattern="hearts"] .domino-half,
+html[data-domino-pattern="flowers"] .domino-half,
+html[data-domino-pattern="sparkles"] .domino-half{
+  overflow:hidden;
+}
+
+/* each half shows its matching half of ONE 3:1 artwork */
+html[data-domino-pattern="leaves"] .domino-half::before,
+html[data-domino-pattern="ribbons"] .domino-half::before,
+html[data-domino-pattern="hearts"] .domino-half::before,
+html[data-domino-pattern="flowers"] .domino-half::before,
+html[data-domino-pattern="sparkles"] .domino-half::before{
+  inset:0 auto 0 0 !important;
+  width:200% !important;
+  height:100% !important;
+  background-size:100% 100% !important;
+  background-position:center !important;
+  background-repeat:no-repeat !important;
+  transform:none !important;
+}
+html[data-domino-pattern="leaves"] .domino-half:nth-child(2)::before,
+html[data-domino-pattern="ribbons"] .domino-half:nth-child(2)::before,
+html[data-domino-pattern="hearts"] .domino-half:nth-child(2)::before,
+html[data-domino-pattern="flowers"] .domino-half:nth-child(2)::before,
+html[data-domino-pattern="sparkles"] .domino-half:nth-child(2)::before{
+  left:auto !important;
+  right:0 !important;
+}
+
+/* stronger, but still behind text */
+html[data-domino-pattern="leaves"] .domino-half::before{opacity:.38 !important}
+html[data-domino-pattern="ribbons"] .domino-half::before{opacity:.34 !important}
+html[data-domino-pattern="hearts"] .domino-half::before{opacity:.34 !important}
+html[data-domino-pattern="flowers"] .domino-half::before{opacity:.30 !important}
+html[data-domino-pattern="sparkles"] .domino-half::before{opacity:.32 !important}
+
+/* teacher preview: clear enough to judge */
+html[data-domino-pattern="leaves"] .design-preview .domino-half::before{opacity:.52 !important}
+html[data-domino-pattern="ribbons"] .design-preview .domino-half::before{opacity:.48 !important}
+html[data-domino-pattern="hearts"] .design-preview .domino-half::before{opacity:.48 !important}
+html[data-domino-pattern="flowers"] .design-preview .domino-half::before{opacity:.44 !important}
+html[data-domino-pattern="sparkles"] .design-preview .domino-half::before{opacity:.46 !important}
+
+/* pattern picker thumbnails — show the whole artwork instead of cropping it */
+.design-pattern.pattern-leaves .pattern-demo,
+.design-pattern.pattern-ribbons .pattern-demo,
+.design-pattern.pattern-hearts .pattern-demo,
+.design-pattern.pattern-flowers .pattern-demo,
+.design-pattern.pattern-sparkles .pattern-demo{
+  background-size:100% 100% !important;
+  background-position:center !important;
+  background-repeat:no-repeat !important;
+}
