@@ -23,7 +23,7 @@ function makeTiles(pairs){
  const color=i=>((i%5)+5)%5;
  const tiles=[{id:1,left:'התחלה',right:pairs[0].right,leftColor:4,rightColor:color(0)}];
  for(let i=0;i<pairs.length-1;i++)tiles.push({id:i+2,left:pairs[i].left,right:pairs[i+1].right,leftColor:color(i),rightColor:color(i+1)});
- tiles.push({id:pairs.length+1,left:pairs[pairs.length-1].left,right:'סיום',leftColor:color(pairs.length-1),rightColor:4});
+ const lastColor=color(pairs.length-1);tiles.push({id:pairs.length+1,left:pairs[pairs.length-1].left,right:'סיום',leftColor:lastColor,rightColor:(lastColor+1)%5});
  return tiles;
 }
 async function room(code){return cache().get(roomKey(code));}
