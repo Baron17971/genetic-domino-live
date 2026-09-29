@@ -1188,3 +1188,22 @@ html[data-domino-pattern="sparkles"] .design-preview .domino-half::before{opacit
   background-position:center !important;
   background-repeat:no-repeat !important;
 }
+
+
+/* v35 — correct RTL artwork anchoring: artwork must enter from OUTER edges */
+html[data-domino-pattern="leaves"] .domino-half:first-child::before,
+html[data-domino-pattern="ribbons"] .domino-half:first-child::before,
+html[data-domino-pattern="hearts"] .domino-half:first-child::before,
+html[data-domino-pattern="flowers"] .domino-half:first-child::before,
+html[data-domino-pattern="sparkles"] .domino-half:first-child::before{
+  left:auto !important;
+  right:0 !important;
+}
+html[data-domino-pattern="leaves"] .domino-half:last-child::before,
+html[data-domino-pattern="ribbons"] .domino-half:last-child::before,
+html[data-domino-pattern="hearts"] .domino-half:last-child::before,
+html[data-domino-pattern="flowers"] .domino-half:last-child::before,
+html[data-domino-pattern="sparkles"] .domino-half:last-child::before{
+  right:auto !important;
+  left:0 !important;
+}
