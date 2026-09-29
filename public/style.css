@@ -896,3 +896,115 @@ html[data-domino-pattern="corners"] .domino-half:after{
     inset 0 -3px 0 rgba(0,0,0,.11);
   transform:translateY(-1px);
 }
+
+
+/* v31 — organic pattern set: circles, leaves, ribbons, hearts, soft corners */
+.design-pattern.pattern-circles .pattern-demo{
+  background-color:#35566F;
+  background-image:
+    radial-gradient(circle at 22% 30%,rgba(255,255,255,.22) 0 18px,transparent 19px),
+    radial-gradient(circle at 76% 66%,rgba(255,255,255,.16) 0 27px,transparent 28px),
+    radial-gradient(circle at 52% 14%,rgba(255,255,255,.10) 0 10px,transparent 11px);
+}
+.design-pattern.pattern-leaves .pattern-demo{
+  background-color:#C7B392;
+  background-image:
+    radial-gradient(ellipse 26px 13px at 24% 34%,rgba(255,255,255,.20) 0 96%,transparent 100%),
+    radial-gradient(ellipse 30px 14px at 74% 67%,rgba(255,255,255,.16) 0 96%,transparent 100%),
+    linear-gradient(56deg,transparent 48%,rgba(255,255,255,.18) 49% 51%,transparent 52%);
+  background-repeat:no-repeat;
+}
+.design-pattern.pattern-ribbons .pattern-demo{
+  background-color:#81919A;
+  background-image:
+    radial-gradient(ellipse at -2% 12%,transparent 58%,rgba(255,255,255,.20) 59% 63%,transparent 64%),
+    radial-gradient(ellipse at 102% 88%,transparent 58%,rgba(255,255,255,.15) 59% 63%,transparent 64%);
+}
+.design-pattern.pattern-hearts .pattern-demo{
+  background-color:#6F2747;
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='80' viewBox='0 0 160 80'%3E%3Cg fill='%23ffffff' opacity='.18'%3E%3Cpath d='M40 57 C18 42 18 23 31 19 C39 16 46 20 50 27 C54 20 61 16 69 19 C82 23 82 42 60 57 L50 64 Z'/%3E%3Cpath d='M106 48 C92 38 92 27 101 24 C106 22 111 25 114 29 C117 25 122 22 127 24 C136 27 136 38 122 48 L114 54 Z'/%3E%3C/g%3E%3C/svg%3E");
+  background-size:100% 100%;
+  background-repeat:no-repeat;
+}
+.design-pattern.pattern-softcorners .pattern-demo{
+  background:#4E5B43;
+}
+.design-pattern.pattern-softcorners .pattern-demo:before,
+.design-pattern.pattern-softcorners .pattern-demo:after{
+  content:"";
+  position:absolute;
+  width:40px;height:40px;
+  border:2px solid rgba(255,255,255,.32);
+  pointer-events:none;
+}
+.design-pattern.pattern-softcorners .pattern-demo:before{
+  right:8px;top:8px;border-left:0;border-bottom:0;border-radius:0 15px 0 0
+}
+.design-pattern.pattern-softcorners .pattern-demo:after{
+  left:8px;bottom:8px;border-right:0;border-top:0;border-radius:0 0 0 15px
+}
+
+/* Live tile patterns */
+html[data-domino-pattern="circles"] .domino-half{
+  background-image:
+    radial-gradient(circle at 20% 28%,rgba(255,255,255,.11) 0 18px,transparent 19px),
+    radial-gradient(circle at 76% 68%,rgba(255,255,255,.08) 0 28px,transparent 29px),
+    radial-gradient(circle at 50% 14%,rgba(255,255,255,.06) 0 10px,transparent 11px);
+}
+html[data-domino-pattern="leaves"] .domino-half{
+  background-image:
+    radial-gradient(ellipse 25px 12px at 18% 28%,rgba(255,255,255,.11) 0 96%,transparent 100%),
+    radial-gradient(ellipse 28px 13px at 80% 72%,rgba(255,255,255,.08) 0 96%,transparent 100%);
+  background-repeat:no-repeat;
+}
+html[data-domino-pattern="ribbons"] .domino-half{
+  background-image:
+    radial-gradient(ellipse at -4% 12%,transparent 58%,rgba(255,255,255,.11) 59% 63%,transparent 64%),
+    radial-gradient(ellipse at 104% 88%,transparent 58%,rgba(255,255,255,.08) 59% 63%,transparent 64%);
+}
+html[data-domino-pattern="hearts"] .domino-half{
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='120' viewBox='0 0 240 120'%3E%3Cg fill='%23ffffff' opacity='.10'%3E%3Cpath d='M54 84 C20 61 20 31 40 24 C53 20 65 27 72 39 C79 27 91 20 104 24 C124 31 124 61 90 84 L72 96 Z'/%3E%3Cpath d='M166 72 C144 57 144 38 157 34 C165 31 173 36 178 43 C183 36 191 31 199 34 C212 38 212 57 190 72 L178 81 Z'/%3E%3C/g%3E%3C/svg%3E");
+  background-size:100% 100%;
+  background-repeat:no-repeat;
+}
+html[data-domino-pattern="softcorners"] .domino-half{position:relative}
+html[data-domino-pattern="softcorners"] .domino-half:before,
+html[data-domino-pattern="softcorners"] .domino-half:after{
+  content:"";position:absolute;width:30px;height:30px;
+  border:2px solid rgba(255,255,255,.20);pointer-events:none
+}
+html[data-domino-pattern="softcorners"] .domino-half:before{
+  right:7px;top:7px;border-left:0;border-bottom:0;border-radius:0 12px 0 0
+}
+html[data-domino-pattern="softcorners"] .domino-half:after{
+  left:7px;bottom:7px;border-right:0;border-top:0;border-radius:0 0 0 12px
+}
+
+/* Stronger preview, same language */
+html[data-domino-pattern="circles"] .design-preview .domino-half{
+  background-image:
+    radial-gradient(circle at 20% 30%,rgba(255,255,255,.20) 0 18px,transparent 19px),
+    radial-gradient(circle at 74% 66%,rgba(255,255,255,.15) 0 28px,transparent 29px),
+    radial-gradient(circle at 48% 12%,rgba(255,255,255,.11) 0 10px,transparent 11px);
+}
+html[data-domino-pattern="leaves"] .design-preview .domino-half{
+  background-image:
+    radial-gradient(ellipse 30px 15px at 18% 28%,rgba(255,255,255,.20) 0 96%,transparent 100%),
+    radial-gradient(ellipse 32px 16px at 80% 72%,rgba(255,255,255,.15) 0 96%,transparent 100%);
+}
+html[data-domino-pattern="ribbons"] .design-preview .domino-half{
+  background-image:
+    radial-gradient(ellipse at -4% 12%,transparent 55%,rgba(255,255,255,.18) 56% 61%,transparent 62%),
+    radial-gradient(ellipse at 104% 88%,transparent 55%,rgba(255,255,255,.14) 56% 61%,transparent 62%);
+}
+html[data-domino-pattern="hearts"] .design-preview .domino-half{
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='120' viewBox='0 0 240 120'%3E%3Cg fill='%23ffffff' opacity='.18'%3E%3Cpath d='M54 84 C20 61 20 31 40 24 C53 20 65 27 72 39 C79 27 91 20 104 24 C124 31 124 61 90 84 L72 96 Z'/%3E%3Cpath d='M166 72 C144 57 144 38 157 34 C165 31 173 36 178 43 C183 36 191 31 199 34 C212 38 212 57 190 72 L178 81 Z'/%3E%3C/g%3E%3C/svg%3E");
+  background-size:100% 100%;
+}
+html[data-domino-pattern="softcorners"] .design-preview .domino-half:before,
+html[data-domino-pattern="softcorners"] .design-preview .domino-half:after{
+  border-color:rgba(255,255,255,.34);width:38px;height:38px
+}
