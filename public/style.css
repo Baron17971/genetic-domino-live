@@ -1282,3 +1282,24 @@ html[data-domino-pattern="sparkles"] .domino-half:last-child::before{
   left:-3% !important;
   right:auto !important;
 }
+
+
+/* v39 — asymmetric corner positioning: right artwork up/right, left artwork down/left */
+html[data-domino-pattern="leaves"] .domino-half:first-child::before,
+html[data-domino-pattern="ribbons"] .domino-half:first-child::before,
+html[data-domino-pattern="hearts"] .domino-half:first-child::before,
+html[data-domino-pattern="flowers"] .domino-half:first-child::before,
+html[data-domino-pattern="sparkles"] .domino-half:first-child::before{
+  right:-6% !important;
+  left:auto !important;
+  top:-5% !important;
+}
+html[data-domino-pattern="leaves"] .domino-half:last-child::before,
+html[data-domino-pattern="ribbons"] .domino-half:last-child::before,
+html[data-domino-pattern="hearts"] .domino-half:last-child::before,
+html[data-domino-pattern="flowers"] .domino-half:last-child::before,
+html[data-domino-pattern="sparkles"] .domino-half:last-child::before{
+  left:-6% !important;
+  right:auto !important;
+  top:4% !important;
+}
