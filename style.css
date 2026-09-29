@@ -20,3 +20,27 @@
  .home-teacher-hotspot{top:29.5%;width:55%;height:5.8%;min-width:0}
  .create-game-card{margin-left:9px;margin-right:9px}
 }
+
+.home-only{width:100%;min-height:100vh;background:#f7f0e9}
+.home-only .home-visual{width:100%;min-height:100vh;border-radius:0;box-shadow:none}
+.home-only .home-visual img{width:100%;min-height:100vh;object-fit:cover;object-position:top center}
+.home-demo-hotspot{position:absolute;z-index:3;left:50%;top:36.6%;transform:translate(-50%,-50%);width:28%;height:5.4%;min-width:150px;border:0;border-radius:999px;background:transparent;cursor:pointer}
+.home-demo-hotspot:focus-visible,.home-teacher-hotspot:focus-visible{outline:3px solid rgba(123,90,166,.65);outline-offset:4px}
+.setup-shell,.demo-shell{padding-top:18px}
+.setup-topbar{display:flex;justify-content:flex-start;margin-bottom:10px}
+.back-home{width:auto}
+.demo-card{max-width:980px;margin:18px auto}
+.demo-chain{display:flex;gap:10px;overflow:auto;padding:18px 2px;align-items:center}
+@media(min-width:761px){
+ .home-only .home-visual img{height:auto;min-height:100vh}
+ .home-teacher-hotspot{top:31%;width:24%;height:7%}
+ .home-demo-hotspot{top:38.7%;width:18%;height:5.8%}
+}
+@media(max-width:760px){
+ .home-only .home-visual{min-height:100svh}
+ .home-only .home-visual img{height:100svh;min-height:100svh;object-fit:cover;object-position:top center}
+ .home-teacher-hotspot{top:29.5%;width:55%;height:5.8%;min-width:0}
+ .home-demo-hotspot{top:36.8%;width:44%;height:5.2%;min-width:0}
+ .setup-shell,.demo-shell{width:min(100% - 18px,700px);padding-top:10px}
+ .back-home{width:auto}
+}
