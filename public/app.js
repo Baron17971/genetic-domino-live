@@ -33,32 +33,19 @@ function complete(){return '<div class="complete"><strong>השרשרת הושל�
 function startPoll(fn){clearInterval(timer);timer=setInterval(fn,1100)}
 function parsePairs(text){return text.split(/\n+/).map(x=>{const p=x.split('|');return{left:(p.shift()||'').trim(),right:p.join('|').trim()}}).filter(p=>p.left&&p.right).slice(0,40)}
 function renderHome(){
- clearInterval(timer);document.body.classList.remove('projector');
- root.innerHTML='<div class="home-only">'+homeVisual()+'</div>';
- const teacher=document.getElementById('homeTeacherStart'),demo=document.getElementById('homeDemoStart');
+ clearInterval(timer);document.body.classList.remove('projector');document.body.classList.add('landing');
+ root.innerHTML='<div class="home-only">'+homeVisual()+
+ '<div class="home-demo-modal" id="homeDemoModal" hidden><div class="home-demo-backdrop" id="closeDemoBackdrop"></div><section class="home-demo-panel" role="dialog" aria-modal="true" aria-label="דוגמה למשחק DomiKnow"><button type="button" class="demo-close" id="closeDemo" aria-label="סגירת הדוגמה">×</button><div class="demo-kicker">DomiKnow · דוגמה חיה</div><h2>כך נראית התאמה במשחק</h2><div class="open-clue"><span>ההתאמה הפתוחה</span>תהליך יצירת מזון בצמחים בעזרת אור השמש</div><div class="demo-sample-tile">'+tile({left:'פוטוסינתזה',right:'תהליך יצירת מזון בצמחים בעזרת אור השמש'})+'</div><div class="feedback ok">✓ זו ההתאמה הנכונה</div></section></div></div>';
+ const teacher=document.getElementById('homeTeacherStart'),demo=document.getElementById('homeDemoStart'),modal=document.getElementById('homeDemoModal');
  if(teacher)teacher.onclick=renderSetup;
- if(demo)demo.onclick=renderDemo;
+ const close=()=>{if(modal)modal.hidden=true};
+ if(demo)demo.onclick=()=>{if(modal){modal.hidden=false;fitDominoText()}};
+ document.getElementById('closeDemo')?.addEventListener('click',close);
+ document.getElementById('closeDemoBackdrop')?.addEventListener('click',close);
 }
-function renderDemo(){
- clearInterval(timer);document.body.classList.remove('projector');
- const sample=[
-  {left:'מים',right:'H₂O'},
-  {left:'פוטוסינתזה',right:'תהליך יצירת מזון בצמחים'},
-  {left:'מיטוכונדריה',right:'אברון שבו מופקת אנרגיה'},
-  {left:'DNA',right:'מולקולה הנושאת מידע תורשתי'}
- ];
- root.innerHTML='<div class="shell demo-shell"><div class="setup-topbar"><button class="btn ghost back-home" id="backHome">← חזרה לדף הבית</button></div>'+
- hero('כך נראה משחק פעיל לדוגמה','DomiKnow')+
- '<section class="card demo-card"><h2>דוגמה למשחק כיתתי</h2><p class="muted">המורה יוצר/ת זוגות, התלמידים מקבלים קוביות, וכל הכיתה בונה יחד שרשרת נכונה.</p>'+
- '<div class="open-clue"><span>ההתאמה הפתוחה</span>תהליך יצירת מזון בצמחים</div>'+
- '<div class="demo-chain">'+sample.map((t,i)=>tile(t,true)+(i<sample.length-1?'<span class="connector">‹</span>':'')).join('')+'</div>'+
- '<div class="btns"><button class="btn pri" id="demoTeacher">כניסת מורה ויצירת משחק</button></div></section></div>';
- document.getElementById('backHome').onclick=renderHome;
- document.getElementById('demoTeacher').onclick=renderSetup;
- fitDominoText();
-}
+
 function renderSetup(){
- document.body.classList.remove('projector');const last=localStorage.getItem('pairs-domino-last-teacher')||'';
+ document.body.classList.remove('projector','landing');const last=localStorage.getItem('pairs-domino-last-teacher')||'';
  root.innerHTML='<div class="shell setup-shell"><div class="setup-topbar"><button class="btn ghost back-home" id="backHome">← חזרה לדף הבית</button></div>'+
  '<section class="card create-game-card" id="createGameSection"><h2>יצירת משחק חדש</h2><div class="grid"><div><label class="field"><span>מקצוע</span><input id="subjectName" maxlength="60" placeholder="לדוגמה: ביולוגיה"></label><label class="field"><span>כיתה</span><input id="className" maxlength="60" placeholder="לדוגמה: ח׳2"></label><label class="field"><span>נושא</span><input id="topicName" maxlength="80" placeholder="לדוגמה: מערכת הנשימה"></label><label class="field"><span>מספר זוגות</span><input id="wantedPairs" type="number" min="4" max="40" value="20" inputmode="numeric"></label><label class="field"><span>שם המשחק — לא חובה</span><input id="gameTitle" maxlength="80" placeholder="לדוגמה: נושמים נכון"></label></div><div class="muted">הזינו את פרטי השיעור פעם אחת. המקצוע, הכיתה והנושא ייכנסו אוטומטית לפרומפט.<br><br>את הזוגות מזינים בפורמט:<br><strong>מושג | התאמה</strong></div></div>'+
  '<section class="prompt-helper"><div class="prompt-head"><div><strong>צריכים עזרה ביצירת הזוגות?</strong><span>ערכו את הפרומפט והעתיקו אותו לבינה המועדפת עליכם.</span></div><button class="btn ghost compact-btn" id="copyPrompt">העתקת פרומפט</button></div><textarea id="promptText" class="prompt-text">אני מורה ל__________ ומלמד/ת תלמידי כיתה ________ את הנושא: __________.\nצור עבורי מאגר של 20 זוגות למשחק דומינו לימודי.\n\nכל זוג צריך לכלול:\nמושג קצר | הגדרה / שאלה / תיאור שהתשובה עליו היא בדיוק אותו מושג\n\nהקפד על ניסוח קצר וברור, התאמה לגיל התלמידים, ללא כפילויות, ללא מושגים כמעט זהים, וללא כתיבת המושג עצמו בתוך ההגדרה.\nהמושג צריך להיות קצר ככל האפשר, רצוי עד 22 תווים. ההגדרה/התיאור צריכים להיות תמציתיים, רצוי עד 55 תווים. אם ניתן לקצר בלי לפגוע בדיוק — קצר.\n\nהחזר את התשובה בתוך בלוק קוד רגיל בלבד (plain text), ללא כותרת, ללא מספור, ללא bullets וללא טקסט לפני או אחרי בלוק הקוד.\n\nבתוך בלוק הקוד חייבות להיות בדיוק מספר השורות שביקשתי — שורה אחת לכל זוג.\nכל זוג נכתב בשורה אחת בלבד בפורמט:\nמושג | התאמה\n\nבסיום כל זוג לחץ Enter פעם אחת ועבור לשורה חדשה.\nאסור לכתוב שני זוגות באותה שורה ואסור להמשיך זוג חדש באותה שורה.\n\nדוגמה מדויקת למבנה הפלט בתוך בלוק הקוד:\nמיטוכונדריה | אברון שבו מתבצעת נשימה תאית\nריבוזום | אברון שבו מתבצע תרגום\nDNA | מולקולה הנושאת מידע תורשתי</textarea></section>'+ 
