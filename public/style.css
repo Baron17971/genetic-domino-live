@@ -1412,3 +1412,31 @@ html[data-domino-pattern="none"] .domino-half::after{
   .group-count{grid-template-columns:repeat(3,1fr);gap:8px}
   .group-count-btn{padding:12px 6px;font-size:.9rem}
 }
+
+
+/* v46 — DomiKnow Run teacher + student */
+.run-board-title,.run-student-head{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}
+.run-team-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:16px}
+.run-team-card{border:1px solid #E2D9CE;background:#FFFDF9;border-radius:22px;padding:18px;box-shadow:0 10px 24px rgba(24,38,52,.07)}
+.run-team-card.lobby{background:#FBF8F2}
+.run-team-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+.run-team-head h3{margin:3px 0 0;font-size:1.15rem;color:#1E3448}
+.run-team-head>strong{font-size:1.05rem;color:#35566F}
+.run-team-label{font-size:.74rem;color:#7C8790}
+.run-progress{height:14px;border-radius:999px;background:#E8E3DA;overflow:hidden;margin:14px 0 12px}
+.run-progress>span{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,#35566F,#7FA49B);transition:width .35s ease}
+.run-team-roster{display:flex;gap:7px;flex-wrap:wrap;min-height:34px}
+.run-winner{padding:8px 12px;border-radius:999px;background:#E6F0ED;color:#42675F;font-weight:800}
+.student-group-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:16px 0}
+.student-group-choice{border:1px solid #D9D0C5;background:#FFFDF9;border-radius:16px;padding:14px;display:flex;align-items:center;gap:10px;text-align:right;cursor:pointer;color:#35566F}
+.student-group-choice>span{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:#E7EEF2;font-weight:800}
+.student-group-choice.selected{border-color:#35566F;box-shadow:0 0 0 2px rgba(53,86,111,.12);background:#F4F8FA}
+.run-waiting{display:grid;gap:10px;justify-items:center}
+.run-waiting strong{font-size:1.25rem;color:#35566F}
+.run-team-complete{text-align:center}
+.run-team-complete .setup-mode-pill{margin-top:10px}
+.run-student-card .my-tile{margin-top:16px}
+@media(max-width:760px){
+ .run-team-grid,.student-group-grid{grid-template-columns:1fr}
+ .run-team-head>strong{white-space:nowrap}
+}
