@@ -111,7 +111,10 @@ async function renderTeacher(){
  const s=document.getElementById('startGame');if(s)s.onclick=async()=>{s.disabled=true;try{await post({action:'start',teacherToken:token});renderTeacher()}catch(e){toast(e.code==='no_players'?'אין עדיין תלמידים':'לא ניתן להתחיל');s.disabled=false}};
  const r=document.getElementById('resetGame');if(r)r.onclick=async()=>{if(confirm('לאפס את השרשרת ולחלק מחדש?')){await post({action:'reset',teacherToken:token});renderTeacher()}};
  document.getElementById('newRoster').onclick=async()=>{if(confirm('למחוק את רשימת התלמידים ולפתוח לובי חדש?')){await post({action:'newRoster',teacherToken:token});renderTeacher()}};
- fitDominoText();fitDominoText();updateTurnTimer(d);startPoll(async()=>{try{const n=await get({teacherToken:token});updateTurnTimer(n);if(n.chainCount>d.chainCount){playSuccessSound();showSuccessMoment('נוצר חיבור')}if(turnTiming(n).rotate){const x=await post({action:'tick',teacherToken:token});if(x.rotated){stableRerender(renderTeacher);return}}if(n.phase!==d.phase||n.chainCount!==d.chainCount||n.currentClue!==d.currentClue){stableRerender(renderTeacher);return}
+ fitDominoText();fitDominoText();updateTurnTimer(d);startPoll(async()=>{try{const n=await get({teacherToken:token});updateTurnTimer(n);if(n.chainCount>d.chainCount){playSuccessSound();showSuccessMoment('נוצר חיבור')}if(turnTiming(n).rotate){const x=await post({action:'tick',teacherToken:token});if(x.rotated){stableRerender(renderTeacher);return}}const prevChain=Number(d.chainCount||0),nextChain=Number(n.chainCount||0);
+const prevClue=d.currentClue||'',nextClue=n.currentClue||'';
+if(n.phase!==d.phase){stableRerender(renderTeacher);return}
+if(d.phase!=='lobby'&&(nextChain!==prevChain||nextClue!==prevClue)){stableRerender(renderTeacher);return}
 const oldPlayers=d.players||[],newPlayers=n.players||[];
 if(newPlayers.length!==oldPlayers.length){
  const roster=document.querySelector('.roster');
