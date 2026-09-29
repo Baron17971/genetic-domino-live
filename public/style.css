@@ -615,3 +615,11 @@ input:focus,textarea:focus{
     object-position:center;
   }
 }
+
+
+/* Stable live layout: reserve timer height so state changes do not move the board. */
+.turn-timer{min-height:78px}
+.student-turn-timer{min-height:78px}
+@media(max-width:760px){
+  .turn-timer{min-height:78px}
+}
