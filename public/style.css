@@ -3,3 +3,20 @@
 @media(max-width:760px){.shell{width:min(100% - 18px,700px);padding-top:10px}.hero{min-height:170px;border-radius:24px;padding:24px}.hero h1{font-size:2.35rem}.card{border-radius:22px;padding:18px}.how,.grid{grid-template-columns:1fr}.teacher-top{display:grid}.joinbox{align-items:flex-start}.qr img{width:98px;height:98px}.domino{min-width:190px;height:94px}.domino-half{font-size:.8rem}.my-tile{height:190px}.my-tile .domino{height:100%;min-width:0}.my-tile .domino-half{font-size:1rem;padding:14px}.my-tile .domino-half-text{height:100%;max-height:none}.btn{width:100%}.btns .btn{flex:1;min-width:140px}.prompt-head,.pairs-head{display:grid}.compact-btn{width:100%}.pair-help{align-items:flex-start}}
 
 .combo-create{flex:1 1 100%;font-weight:700;font-size:1rem;padding:14px 20px}
+
+.home-shell{padding-top:0}
+.home-visual{position:relative;width:100%;overflow:hidden;border-radius:0 0 30px 30px;background:#f7f0e9;box-shadow:var(--shadow)}
+.home-visual picture,.home-visual img{display:block;width:100%;height:auto}
+.home-teacher-hotspot{position:absolute;z-index:3;left:50%;top:29.5%;transform:translate(-50%,-50%);width:35%;height:6.5%;min-width:170px;border:0;border-radius:999px;background:transparent;cursor:pointer}
+.home-teacher-hotspot:focus-visible{outline:3px solid rgba(123,90,166,.65);outline-offset:4px}
+.create-game-card{scroll-margin-top:18px}
+@media(min-width:761px){
+ .home-visual{border-radius:0 0 34px 34px}
+ .home-teacher-hotspot{top:31%;width:24%;height:7%}
+}
+@media(max-width:760px){
+ .home-shell{width:100%;padding-top:0}
+ .home-visual{border-radius:0}
+ .home-teacher-hotspot{top:29.5%;width:55%;height:5.8%;min-width:0}
+ .create-game-card{margin-left:9px;margin-right:9px}
+}
