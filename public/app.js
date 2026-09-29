@@ -68,12 +68,42 @@ function updateTurnTimer(d,id='turnTimer'){
  else{el.classList.remove('warning');el.innerHTML='<span>זמן לחיבור</span><strong>'+t.remain+'</strong><span>שניות</span>'}
 }
 function parsePairs(text){return text.split(/\n+/).map(x=>{const p=x.split('|');return{left:(p.shift()||'').trim(),right:p.join('|').trim()}}).filter(p=>p.left&&p.right).slice(0,40)}
+const DESIGN_KEY='domiknow-design-v1';
+const palettes=[
+ {id:'beach',name:'חוף',colors:['#35566F','#C7B392','#E3D7C6','#81919A']},
+ {id:'classic',name:'קלאסי',colors:['#061A44','#86113E','#0B6769','#55306F']},
+ {id:'ocean',name:'אוקיינוס',colors:['#173B57','#2E6673','#6F9694','#B7C8BE']},
+ {id:'berry',name:'ברי',colors:['#6F2747','#934A68','#76506F','#B47C89']},
+ {id:'earth',name:'אדמה',colors:['#4E5B43','#8A6C3D','#A98E66','#6F7C63']}
+];
+const patterns=[
+ {id:'grid',name:'גריד עדין'},
+ {id:'dots',name:'נקודות רכות'},
+ {id:'wave',name:'גלים'},
+ {id:'grain',name:'טקסטורה'},
+ {id:'corners',name:'פינות גאומטריות'}
+];
+function savedDesign(){try{return JSON.parse(sessionStorage.getItem(DESIGN_KEY)||'')||{palette:'beach',pattern:'grid'}}catch{return{palette:'beach',pattern:'grid'}}}
+function saveDesign(d){sessionStorage.setItem(DESIGN_KEY,JSON.stringify(d));applyDesign(d)}
+function applyDesign(d={}){const p=d.palette||'beach',x=d.pattern||'grid';document.documentElement.dataset.dominoPalette=p;document.documentElement.dataset.dominoPattern=x}
+function renderDesign(){
+ clearInterval(timer);document.body.classList.remove('projector','landing');
+ let design=savedDesign();applyDesign(design);
+ const paletteCards=palettes.map(p=>'<button type="button" class="design-palette '+(p.id===design.palette?'selected':'')+'" data-palette="'+p.id+'"><span class="palette-swatches">'+p.colors.map(x=>'<i style="background:'+x+'"></i>').join('')+'</span><strong>'+esc(p.name)+'</strong><span class="design-check">✓</span></button>').join('');
+ const patternCards=patterns.map(p=>'<button type="button" class="design-pattern pattern-'+p.id+' '+(p.id===design.pattern?'selected':'')+'" data-pattern="'+p.id+'"><span class="pattern-demo"></span><strong>'+esc(p.name)+'</strong><span class="design-check">✓</span></button>').join('');
+ root.innerHTML='<div class="shell design-shell"><div class="setup-topbar"><button class="btn ghost back-home" id="designBack">← חזרה לדף הבית</button></div><section class="card design-card"><div class="design-kicker">שלב 1 מתוך 2</div><h2>בחרו את המראה של DomiKnow שלכם</h2><p class="muted">בחרו פלטת צבעים ודוגמה עדינה לקוביות. תוכלו לראות מיד תצוגה מקדימה.</p><h3>פלטת צבעים</h3><div class="palette-grid">'+paletteCards+'</div><h3>דוגמת רקע</h3><div class="pattern-grid">'+patternCards+'</div><div class="design-preview"><span>תצוגה מקדימה</span>'+tile({left:'מושג',right:'הגדרה קצרה',leftColor:0,rightColor:1})+'</div><button class="btn pri design-next" id="designNext">המשך ליצירת המשחק</button></section></div>';
+ document.getElementById('designBack').onclick=renderHome;
+ document.querySelectorAll('[data-palette]').forEach(b=>b.onclick=()=>{design={...design,palette:b.dataset.palette};saveDesign(design);renderDesign()});
+ document.querySelectorAll('[data-pattern]').forEach(b=>b.onclick=()=>{design={...design,pattern:b.dataset.pattern};saveDesign(design);renderDesign()});
+ document.getElementById('designNext').onclick=renderSetup;
+ fitDominoText();
+}
 function renderHome(){
  clearInterval(timer);document.body.classList.remove('projector');document.body.classList.add('landing');
  root.innerHTML='<div class="home-only">'+homeVisual()+
  '<div class="home-demo-modal" id="homeDemoModal" hidden><div class="home-demo-backdrop" id="closeDemoBackdrop"></div><section class="home-demo-panel" role="dialog" aria-modal="true" aria-label="דוגמה למשחק DomiKnow"><button type="button" class="demo-close" id="closeDemo" aria-label="סגירת הדוגמה">×</button><div class="demo-kicker">DomiKnow · דוגמה חיה</div><h2>כך נראית התאמה במשחק</h2><div class="open-clue"><span>ההתאמה הפתוחה</span>תהליך יצירת מזון בצמחים בעזרת אור השמש</div><div class="demo-sample-tile">'+tile({left:'פוטוסינתזה',right:'תהליך יצירת מזון בצמחים בעזרת אור השמש'})+'</div><div class="feedback ok">✓ זו ההתאמה הנכונה</div></section></div></div>';
  const teacher=document.getElementById('homeTeacherStart'),demo=document.getElementById('homeDemoStart'),modal=document.getElementById('homeDemoModal');
- if(teacher)teacher.onclick=renderSetup;
+ if(teacher)teacher.onclick=renderDesign;
  const close=()=>{if(modal)modal.hidden=true};
  if(demo)demo.onclick=()=>{if(modal){modal.hidden=false;fitDominoText()}};
  document.getElementById('closeDemo')?.addEventListener('click',close);
