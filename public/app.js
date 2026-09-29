@@ -10,7 +10,7 @@ async function get(extra={}){let u='/api/domino?code='+encodeURIComponent(code);
 async function post(body,includeCode=true){const r=await fetch('/api/domino',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(includeCode?{...body,code}:body)});let d={};try{d=await r.json()}catch{}if(!r.ok){const e=new Error(d.error||'request');e.code=d.error;throw e}return d}
 function hero(sub,title='DomiKnow'){return '<section class="hero"><div class="hero-panel"><div class="eyebrow">כשידע ומשחק מתחברים</div><h1>'+esc(title)+'</h1><p>'+esc(sub||'מתאימים, מחברים ובונים יחד שרשרת של ידע.')+'</p></div></section>'}
 function homeVisual(){return '<section class="home-visual" aria-label="DomiKnow — כשידע ומשחק מתחברים"><picture><source media="(max-width:760px)" srcset="/domino-home/domino-home-mobile.png"><img src="/domino-home/domino-home-desktop.png" alt="DomiKnow — משחק דומינו כיתתי"></picture><button type="button" class="home-teacher-hotspot" id="homeTeacherStart" aria-label="כניסת מורה"></button><button type="button" class="home-demo-hotspot" id="homeDemoStart" aria-label="צפו בדוגמה"></button></section>'}
-function tile(t,compact=false){return '<div class="domino '+(compact?'compact':'')+'"><div class="domino-half"><span class="domino-half-text">'+esc(t.left)+'</span></div><div class="domino-half"><span class="domino-half-text">'+esc(t.right)+'</span></div></div>'}
+function tile(t,compact=false){const lc=Number.isInteger(t?.leftColor)?t.leftColor:0,rc=Number.isInteger(t?.rightColor)?t.rightColor:1;return '<div class="domino '+(compact?'compact':'')+'"><div class="domino-half dc-'+lc+'"><span class="domino-half-text">'+esc(t.left)+'</span></div><div class="domino-half dc-'+rc+'"><span class="domino-half-text">'+esc(t.right)+'</span></div></div>'}
 let fitRaf=0;
 function fitDominoText(){
  cancelAnimationFrame(fitRaf);
@@ -31,6 +31,29 @@ function chainHtml(list){if(!list?.length)return '<div class="waiting">השרש�
 function progress(n,total){const p=total?Math.round(n/total*100):0;return '<div class="progress"><span style="width:'+p+'%"></span></div><div class="tiny progress-label">'+n+'/'+total+' קוביות</div>'}
 function complete(){return '<div class="complete"><strong>השרשרת הושלמה ✓</strong><span>כל ההתאמות התחברו.</span></div>'}
 function startPoll(fn){clearInterval(timer);timer=setInterval(fn,1100)}
+function playSuccessSound(){
+ try{
+  const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;
+  const ctx=new AC(),now=ctx.currentTime;
+  [[523.25,0],[659.25,.10],[783.99,.20]].forEach(([freq,delay],i)=>{
+   const o=ctx.createOscillator(),g=ctx.createGain();o.type='sine';o.frequency.value=freq;
+   g.gain.setValueAtTime(.0001,now+delay);g.gain.exponentialRampToValueAtTime(.18,now+delay+.015);g.gain.exponentialRampToValueAtTime(.0001,now+delay+.18);
+   o.connect(g);g.connect(ctx.destination);o.start(now+delay);o.stop(now+delay+.2);
+  });
+  setTimeout(()=>ctx.close().catch(()=>{}),700);
+ }catch{}
+}
+function turnTiming(d){
+ if(d?.phase!=='playing'||!d.turnStartedAt)return{elapsed:0,remain:10,warning:false,rotate:false};
+ const elapsed=Math.max(0,Date.now()-Number(d.turnStartedAt||0)),warning=elapsed>=10000&&elapsed<15000;
+ return{elapsed,remain:warning?Math.max(0,Math.ceil((15000-elapsed)/1000)):Math.max(0,Math.ceil((10000-elapsed)/1000)),warning,rotate:elapsed>=15000};
+}
+function updateTurnTimer(d,id='turnTimer'){
+ const el=document.getElementById(id);if(!el)return;const t=turnTiming(d);
+ if(d?.phase!=='playing'){el.textContent='';el.classList.remove('warning');return}
+ if(t.warning){el.classList.add('warning');el.innerHTML='<strong>עדיין לא נוצר חיבור</strong><span>מי מחזיק בקובייה המתאימה?</span><b>העברה לתלמיד אחר בעוד '+t.remain+' שנ׳</b>'}
+ else{el.classList.remove('warning');el.innerHTML='<span>זמן לחיבור</span><strong>'+t.remain+'</strong><span>שניות</span>'}
+}
 function parsePairs(text){return text.split(/\n+/).map(x=>{const p=x.split('|');return{left:(p.shift()||'').trim(),right:p.join('|').trim()}}).filter(p=>p.left&&p.right).slice(0,40)}
 function renderHome(){
  clearInterval(timer);document.body.classList.remove('projector');document.body.classList.add('landing');
@@ -68,20 +91,20 @@ function renderSetup(){
 async function renderTeacher(){
  try{const d=await get({teacherToken:token});if(!d.teacher)throw new Error('auth');localStorage.setItem('pairs-domino-last-teacher',location.href);const players=d.players||[],spectators=Math.max(0,players.length-(d.tileCount-1));
  root.innerHTML='<div class="shell">'+hero(d.className?'מסך מורה · '+d.className:'מסך מורה',d.title)+'<section class="card"><div class="teacher-top"><div><div class="status"><span class="dot '+(d.phase==='playing'?'on':'')+'"></span>'+(d.phase==='lobby'?'ממתינים לתלמידים':d.phase==='playing'?'המשחק פעיל':'המשחק הושלם')+'</div><h2>קוד כיתה</h2><div class="code">'+esc(code)+'</div></div><div class="joinbox"><div class="qr"><img alt="QR למשחק" src="/api/qr?text='+encodeURIComponent(joinUrl())+'"></div><div><strong>כניסת תלמידים</strong><div class="linkbox">'+esc(joinUrl())+'</div><div class="btns"><button class="btn ghost" id="copyJoin">העתקת קישור</button><button class="btn ghost" id="openProjector">פתיחת מקרן</button></div></div></div></div></section>'+
- '<div class="grid"><section class="card"><h2>תלמידים מחוברים: '+players.length+'</h2><div class="roster">'+(players.length?players.map(p=>'<span class="chip">'+esc(p.name)+'</span>').join(''):'<span class="muted">עדיין אין תלמידים בלובי.</span>')+'</div>'+(spectators?'<div class="tiny note">'+spectators+' תלמידים יהיו צופים בסבב הזה.</div>':'')+'<div class="btns">'+(d.phase==='lobby'?'<button class="btn pri" id="startGame" '+(!players.length?'disabled':'')+'>התחלת המשחק וחלוקת קוביות</button>':'<button class="btn danger" id="resetGame">איפוס המשחק</button>')+'<button class="btn ghost" id="newRoster">ניקוי תלמידים</button></div></section><section class="card"><h2>מצב השרשרת</h2>'+progress(d.chainCount||0,d.tileCount)+(d.currentClue?'<div class="open-clue"><span>ההתאמה הפתוחה</span>'+esc(d.currentClue)+'</div>':'')+'<div class="tiny note">'+d.pairCount+' זוגות · '+d.tileCount+' קוביות</div></section></div>'+
+ '<div class="grid"><section class="card"><h2>תלמידים מחוברים: '+players.length+'</h2><div class="roster">'+(players.length?players.map(p=>'<span class="chip">'+esc(p.name)+'</span>').join(''):'<span class="muted">עדיין אין תלמידים בלובי.</span>')+'</div>'+(spectators?'<div class="tiny note">'+spectators+' תלמידים יהיו צופים בסבב הזה.</div>':'')+'<div class="btns">'+(d.phase==='lobby'?'<button class="btn pri" id="startGame" '+(!players.length?'disabled':'')+'>התחלת המשחק וחלוקת קוביות</button>':'<button class="btn danger" id="resetGame">איפוס המשחק</button>')+'<button class="btn ghost" id="newRoster">ניקוי תלמידים</button></div></section><section class="card"><h2>מצב השרשרת</h2>'+progress(d.chainCount||0,d.tileCount)+(d.currentClue?'<div class="open-clue"><span>ההתאמה הפתוחה</span>'+esc(d.currentClue)+'</div>':'')+'<div class="tiny note">'+d.pairCount+' זוגות · '+d.tileCount+' קוביות</div><div class="turn-timer" id="turnTimer"></div></section></div>'+
  '<section class="card"><h2>השרשרת המשותפת</h2>'+chainHtml(d.chain||[])+(d.phase==='complete'?complete():'')+'</section></div>';
  document.getElementById('copyJoin').onclick=async()=>{try{await navigator.clipboard.writeText(joinUrl());toast('הקישור הועתק')}catch{}};
  document.getElementById('openProjector').onclick=()=>window.open(projectorUrl(),'_blank','noopener');
  const s=document.getElementById('startGame');if(s)s.onclick=async()=>{s.disabled=true;try{await post({action:'start',teacherToken:token});renderTeacher()}catch(e){toast(e.code==='no_players'?'אין עדיין תלמידים':'לא ניתן להתחיל');s.disabled=false}};
  const r=document.getElementById('resetGame');if(r)r.onclick=async()=>{if(confirm('לאפס את השרשרת ולחלק מחדש?')){await post({action:'reset',teacherToken:token});renderTeacher()}};
  document.getElementById('newRoster').onclick=async()=>{if(confirm('למחוק את רשימת התלמידים ולפתוח לובי חדש?')){await post({action:'newRoster',teacherToken:token});renderTeacher()}};
- startPoll(async()=>{try{const n=await get({teacherToken:token});if(n.version!==d.version||n.players.length!==players.length)renderTeacher()}catch{}});
+ updateTurnTimer(d);startPoll(async()=>{try{const n=await get({teacherToken:token});updateTurnTimer(n);if(turnTiming(n).rotate){const x=await post({action:'tick',teacherToken:token});if(x.rotated){renderTeacher();return}}if(n.version!==d.version||n.players.length!==players.length)renderTeacher()}catch{}});
  }catch{root.innerHTML='<div class="shell">'+hero()+'<section class="card"><h2>לא ניתן לפתוח את מסך המורה</h2><a class="btn pri linkbtn" href="/">פתיחת משחק חדש</a></section></div>'}
 }
 async function renderProjector(){
  document.body.classList.add('projector');try{const d=await get({teacherToken:token});if(!d.teacher)throw new Error('auth');
- root.innerHTML='<div class="shell">'+hero(d.className?'תצוגת מקרן · '+d.className:'תצוגת מקרן',d.title)+'<section class="card"><div class="teacher-top"><div><div class="eyebrow">קוד כיתה</div><div class="code">'+esc(code)+'</div></div><div class="joinbox"><div class="qr"><img alt="QR" src="/api/qr?text='+encodeURIComponent(joinUrl())+'"></div><div><strong>'+(d.phase==='lobby'?'סרקו והצטרפו ללובי':d.phase==='playing'?'מי מחזיק את ההתאמה?':'המשחק הסתיים')+'</strong><div class="muted">'+(d.players||[]).length+' תלמידים מחוברים</div></div></div></div>'+(d.currentClue?'<div class="open-clue projector-clue"><span>ההתאמה הפתוחה</span>'+esc(d.currentClue)+'</div>':'')+progress(d.chainCount||0,d.tileCount)+'</section><section class="card">'+chainHtml((d.chain||[]).slice(-5))+(d.lastPlayer?'<div class="feedback ok last-player">✓ '+esc(d.lastPlayer)+' חיבר/ה את הקובייה האחרונה</div>':'')+(d.phase==='complete'?complete():'')+'</section></div>';
- startPoll(async()=>{try{const n=await get({teacherToken:token});if(n.version!==d.version)renderProjector()}catch{}})}catch{root.innerHTML='<div class="shell">'+hero()+'<section class="card"><h2>לא ניתן לפתוח תצוגת מקרן</h2></section></div>'}
+ root.innerHTML='<div class="shell">'+hero(d.className?'תצוגת מקרן · '+d.className:'תצוגת מקרן',d.title)+'<section class="card"><div class="teacher-top"><div><div class="eyebrow">קוד כיתה</div><div class="code">'+esc(code)+'</div></div><div class="joinbox"><div class="qr"><img alt="QR" src="/api/qr?text='+encodeURIComponent(joinUrl())+'"></div><div><strong>'+(d.phase==='lobby'?'סרקו והצטרפו ללובי':d.phase==='playing'?'מי מחזיק את ההתאמה?':'המשחק הסתיים')+'</strong><div class="muted">'+(d.players||[]).length+' תלמידים מחוברים</div></div></div></div>'+(d.currentClue?'<div class="open-clue projector-clue"><span>ההתאמה הפתוחה</span>'+esc(d.currentClue)+'</div>':'')+'<div class="turn-timer projector-turn-timer" id="turnTimer"></div>'+progress(d.chainCount||0,d.tileCount)+'</section><section class="card">'+chainHtml((d.chain||[]).slice(-5))+(d.lastPlayer?'<div class="feedback ok last-player">✓ '+esc(d.lastPlayer)+' חיבר/ה את הקובייה האחרונה</div>':'')+(d.phase==='complete'?complete():'')+'</section></div>';
+ updateTurnTimer(d);startPoll(async()=>{try{const n=await get({teacherToken:token});updateTurnTimer(n);if(n.chainCount>d.chainCount)playSuccessSound();if(turnTiming(n).rotate){const x=await post({action:'tick',teacherToken:token});if(x.rotated){renderProjector();return}}if(n.version!==d.version)renderProjector()}catch{}})}catch{root.innerHTML='<div class="shell">'+hero()+'<section class="card"><h2>לא ניתן לפתוח תצוגת מקרן</h2></section></div>'}
 }
 function joinForm(saved,title='דומינו זוגות'){
  root.innerHTML='<div class="shell student-shell">'+hero('קובייה אחת. התאמה אחת. רגע אחד נכון.',title)+'<section class="card nameform"><h2>כניסה למשחק</h2><p class="muted">כתבו שם פרטי. לאחר שהמורה יתחיל תקבלו קובייה. לחצו כאשר הצד הימני של הקובייה שלכם מתאים להתאמה הפתוחה.</p><input id="playerName" maxlength="24" autocomplete="name" placeholder="השם שלי" value="'+esc(saved||'')+'"><button class="btn pri" id="joinGame">כניסה ללובי</button><div class="feedback" id="joinFeedback"></div></section></div>';
@@ -92,9 +115,9 @@ async function renderStudent(){
  if(d.phase==='lobby'){root.innerHTML='<div class="shell student-shell">'+hero('הצטרפת. מחכים שהמורה יתחיל.',d.title)+'<section class="card waiting">את/ה בלובי ✓</section></div>';startPoll(renderStudent);return}
  if(!d.myTile&&d.phase!=='complete'){root.innerHTML='<div class="shell student-shell">'+hero('את/ה צופה בסבב הזה.',d.title)+'<section class="card waiting">אין לך כרגע קובייה. עקבו אחרי השרשרת על המקרן.</section></div>';startPoll(renderStudent);return}
  if(d.phase==='complete'){root.innerHTML='<div class="shell student-shell">'+hero('השרשרת הושלמה!',d.title)+'<section class="card">'+complete()+'</section></div>';return}
- root.innerHTML='<div class="shell student-shell">'+hero('בדקו האם הצד הימני שלכם מתאים למה שפתוח עכשיו.',d.title)+'<section class="card"><div class="open-clue"><span>ההתאמה הפתוחה</span>'+esc(d.currentClue)+'</div><div class="my-tile">'+tile(d.myTile)+'</div><div class="match-action"><button class="btn pri" id="playTile">זה מתאים — חיבור הקובייה</button><div class="feedback" id="playFeedback"></div></div></section></div>';
- document.getElementById('playTile').onclick=async()=>{const b=document.getElementById('playTile'),f=document.getElementById('playFeedback');b.disabled=true;try{const x=await post({action:'play',playerId:pid});if(x.correct){f.className='feedback ok';f.textContent='נכון! הקובייה התחברה ✓';setTimeout(renderStudent,650)}else{f.className='feedback bad';f.textContent='עדיין לא — חפשו התאמה מדויקת.';b.disabled=false}}catch{b.disabled=false}};
- startPoll(async()=>{try{const n=await get({playerId:pid});if(n.version!==d.version)renderStudent()}catch{}});
+ root.innerHTML='<div class="shell student-shell">'+hero('בדקו האם הצד הימני שלכם מתאים למה שפתוח עכשיו.',d.title)+'<section class="card"><div class="open-clue"><span>ההתאמה הפתוחה</span>'+esc(d.currentClue)+'</div><div class="turn-timer student-turn-timer" id="studentTurn"></div><div class="my-tile">'+tile(d.myTile)+'</div><div class="match-action"><button class="btn pri" id="playTile">זה מתאים — חיבור הקובייה</button><div class="feedback" id="playFeedback"></div></div></section></div>';
+ document.getElementById('playTile').onclick=async()=>{const b=document.getElementById('playTile'),f=document.getElementById('playFeedback');b.disabled=true;try{const x=await post({action:'play',playerId:pid});if(x.correct){playSuccessSound();f.className='feedback ok';f.textContent='נכון! הקובייה התחברה ✓';setTimeout(renderStudent,650)}else{f.className='feedback bad';f.textContent='עדיין לא — חפשו התאמה מדויקת.';b.disabled=false}}catch{b.disabled=false}};
+ updateTurnTimer(d,'studentTurn');startPoll(async()=>{try{const n=await get({playerId:pid});updateTurnTimer(n,'studentTurn');if(n.version!==d.version)renderStudent()}catch{}});
  }catch{root.innerHTML='<div class="shell student-shell">'+hero()+'<section class="card"><h2>המשחק לא נמצא</h2></section></div>'}
 }
 if(path.startsWith('/teacher'))renderTeacher();else if(path.startsWith('/projector'))renderProjector();else if(path.startsWith('/join'))renderStudent();else renderHome();
