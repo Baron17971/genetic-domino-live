@@ -109,6 +109,7 @@ export default async function handler(req,res){
     out.winnerTeamName=g.winnerTeamName||'';
     if(id){
       const p=livePlayers.find(x=>x.id===id);out.joined=Boolean(p);
+      if(p){out.groupId=p.groupId||'';out.teamName=(r.groups||[]).find(x=>x.id===p.groupId)?.name||'';}
       const ps=runPlayerState(g,tiles,id);
       if(ps)Object.assign(out,ps);
     }
