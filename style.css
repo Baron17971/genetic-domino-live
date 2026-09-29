@@ -472,3 +472,38 @@ input:focus,textarea:focus{
 .match-action .pri{
   box-shadow:0 10px 24px rgba(53,86,111,.18);
 }
+
+/* Beach palette typography refinement */
+.domino-half{
+  font-size:1.08rem;
+  padding:9px 10px;
+  line-height:1.2;
+  font-weight:800;
+}
+.domino.compact .domino-half{
+  font-size:1.02rem;
+  padding:8px 9px;
+}
+.my-tile .domino-half{
+  font-size:1.34rem;
+  padding:14px 12px;
+  font-weight:850;
+}
+.projector .domino-half{
+  font-size:1.22rem;
+  padding:12px 11px;
+  font-weight:850;
+}
+
+/* Blue-gray tile needs light text for stronger contrast */
+.domino-half.dc-3{
+  background:#81919A;
+  color:#FFFDF8;
+  text-shadow:0 1px 2px rgba(0,0,0,.20);
+}
+
+@media(max-width:760px){
+  .domino-half{font-size:1rem;padding:8px 9px}
+  .my-tile .domino-half{font-size:1.26rem;padding:12px 10px}
+  .domino.compact .domino-half{font-size:.98rem}
+}
