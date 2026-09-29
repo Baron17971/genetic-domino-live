@@ -1250,3 +1250,35 @@ html[data-domino-pattern="sparkles"] .domino-half:last-child::before{
     inset 0 -4px 0 rgba(0,0,0,.14);
   transform:translateY(-2px);
 }
+
+
+/* v37 — slight artwork bleed beyond domino edges for a more natural fit */
+html[data-domino-pattern="leaves"] .domino-half::before,
+html[data-domino-pattern="ribbons"] .domino-half::before,
+html[data-domino-pattern="hearts"] .domino-half::before,
+html[data-domino-pattern="flowers"] .domino-half::before,
+html[data-domino-pattern="sparkles"] .domino-half::before{
+  width:206% !important;
+  height:102% !important;
+  top:-1% !important;
+  bottom:auto !important;
+  background-size:100% 100% !important;
+  background-repeat:no-repeat !important;
+  background-position:center !important;
+}
+html[data-domino-pattern="leaves"] .domino-half:first-child::before,
+html[data-domino-pattern="ribbons"] .domino-half:first-child::before,
+html[data-domino-pattern="hearts"] .domino-half:first-child::before,
+html[data-domino-pattern="flowers"] .domino-half:first-child::before,
+html[data-domino-pattern="sparkles"] .domino-half:first-child::before{
+  right:-3% !important;
+  left:auto !important;
+}
+html[data-domino-pattern="leaves"] .domino-half:last-child::before,
+html[data-domino-pattern="ribbons"] .domino-half:last-child::before,
+html[data-domino-pattern="hearts"] .domino-half:last-child::before,
+html[data-domino-pattern="flowers"] .domino-half:last-child::before,
+html[data-domino-pattern="sparkles"] .domino-half:last-child::before{
+  left:-3% !important;
+  right:auto !important;
+}
