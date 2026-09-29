@@ -754,3 +754,31 @@ html[data-domino-pattern="corners"] .domino-half:after{left:7px;bottom:7px;borde
  .pattern-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
  .design-pattern:last-child{grid-column:1/-1}
 }
+
+
+/* Direct pattern binding on each tile — survives navigation and live re-renders */
+.domino.pattern-grid .domino-half{
+ background-image:linear-gradient(rgba(255,255,255,.06) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.06) 1px,transparent 1px);
+ background-size:20px 20px
+}
+.domino.pattern-dots .domino-half{
+ background-image:
+ radial-gradient(circle at 20% 28%,rgba(255,255,255,.08) 0 18px,transparent 19px),
+ radial-gradient(circle at 76% 68%,rgba(255,255,255,.06) 0 28px,transparent 29px)
+}
+.domino.pattern-wave .domino-half{
+ background-image:
+ radial-gradient(ellipse at 10% 10%,transparent 62%,rgba(255,255,255,.07) 63% 65%,transparent 66%),
+ radial-gradient(ellipse at 90% 90%,transparent 62%,rgba(255,255,255,.06) 63% 65%,transparent 66%)
+}
+.domino.pattern-grain .domino-half{
+ background-image:radial-gradient(rgba(255,255,255,.10) .6px,transparent .7px);
+ background-size:4px 4px
+}
+.domino.pattern-corners .domino-half{position:relative}
+.domino.pattern-corners .domino-half:before,
+.domino.pattern-corners .domino-half:after{
+ content:"";position:absolute;width:26px;height:26px;border:1px solid rgba(255,255,255,.10);pointer-events:none
+}
+.domino.pattern-corners .domino-half:before{right:7px;top:7px;border-left:0;border-bottom:0}
+.domino.pattern-corners .domino-half:after{left:7px;bottom:7px;border-right:0;border-top:0}
