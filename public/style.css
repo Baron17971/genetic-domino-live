@@ -1461,3 +1461,80 @@ html[data-domino-pattern="none"] .domino-half::after{
  .run-team-card{padding:16px}
  .run-progress{height:16px}
 }
+
+
+/* v50 — stabilize DomiKnow Run layout on mobile / Samsung browsers */
+.run-teacher-shell,
+.run-board,
+.run-team-grid,
+.run-team-card{
+  overflow-anchor:none;
+}
+
+.run-board-title{
+  min-height:92px;
+  align-items:flex-start;
+}
+
+.run-winner{
+  min-height:42px;
+  visibility:hidden;
+  display:inline-flex;
+  opacity:0;
+  pointer-events:none;
+  transition:opacity .2s ease;
+}
+
+.run-winner.show{
+  visibility:visible;
+  opacity:1;
+}
+
+.run-team-card{
+  min-height:220px;
+  contain:layout paint;
+}
+
+.run-team-head{
+  min-height:62px;
+}
+
+.run-team-head h3{
+  min-height:28px;
+}
+
+.run-score{
+  min-width:112px;
+  justify-content:flex-start;
+}
+
+.run-progress{
+  flex:0 0 auto;
+}
+
+.run-progress-caption{
+  min-height:24px;
+}
+
+.run-team-roster{
+  min-height:42px;
+  align-content:flex-start;
+}
+
+@media(max-width:760px){
+  .run-board-title{
+    min-height:108px;
+  }
+
+  .run-team-card{
+    min-height:232px;
+  }
+
+  .run-team-head{
+    min-height:66px;
+  }
+
+  .run-team-roster{
+    min-height:44px;
+  }
+}
