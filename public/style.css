@@ -1440,3 +1440,24 @@ html[data-domino-pattern="none"] .domino-half::after{
  .run-team-grid,.student-group-grid{grid-template-columns:1fr}
  .run-team-head>strong{white-space:nowrap}
 }
+
+
+/* v47 — calmer Run live updates + stronger winner/progress */
+.run-team-card{transition:box-shadow .25s ease,border-color .25s ease,transform .25s ease}
+.run-team-card.complete{border-color:#AFC9C1;background:linear-gradient(180deg,#FFFDF9,#F5FAF8)}
+.run-team-card.winner{border-color:#7FA49B;box-shadow:0 0 0 2px rgba(127,164,155,.15),0 16px 32px rgba(24,38,52,.12);transform:translateY(-1px)}
+.run-score{display:flex;align-items:baseline;gap:6px;direction:rtl;color:#35566F;white-space:nowrap}
+.run-score strong{font-size:2rem;line-height:1;font-weight:900}
+.run-score span{font-size:.78rem;color:#7C8790;font-weight:700}
+.run-score b{font-size:1.05rem;font-weight:800}
+.run-progress{height:18px;margin:16px 0 8px;background:#E7E2D9}
+.run-progress>span{background:linear-gradient(90deg,#35566F,#7FA49B);box-shadow:inset 0 1px 0 rgba(255,255,255,.28)}
+.run-progress-caption{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px;color:#66727B;font-size:.82rem}
+.run-progress-caption strong{color:#35566F;font-size:1rem}
+.run-winner{display:none;align-items:center;justify-content:center;padding:10px 16px;border-radius:999px;background:linear-gradient(90deg,#E4F0EC,#F3EFE2);border:1px solid #BCD1CA;color:#315D56;font-weight:900;box-shadow:0 8px 18px rgba(49,93,86,.09)}
+.run-winner.show{display:inline-flex}
+@media(max-width:760px){
+ .run-score strong{font-size:1.75rem}
+ .run-team-card{padding:16px}
+ .run-progress{height:16px}
+}
