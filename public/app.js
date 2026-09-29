@@ -186,11 +186,79 @@ function renderSetup(){
  syncPrompt();refresh();
  copyPrompt.onclick=async()=>{const t=promptText.value;try{await navigator.clipboard.writeText(t);toast('הפרומפט הועתק')}catch{promptText.select();document.execCommand('copy');toast('הפרומפט הועתק')}};
 
- btn.onclick=async()=>{const f=document.getElementById('homeFeedback'),wanted=Math.max(4,Math.min(40,Number(wantedPairs.value)||20));btn.disabled=true;f.className='feedback';try{let current=ta.value.trim();if(!current){f.textContent='טוען את המאגר…';let t='';try{if(navigator.clipboard?.readText){t=await Promise.race([navigator.clipboard.readText(),new Promise(resolve=>setTimeout(()=>resolve(''),900))])}}catch{}if(t.trim()){t=t.replace(/^\s*\`\`\`(?:text|txt|plaintext)?\s*/i,'').replace(/\s*\`\`\`\s*$/,'').trim();ta.value=t;current=t}}const pairs=parsePairs(ta.value);refresh();if(pairs.length<wanted){f.className='feedback bad';f.textContent='נמצאו '+pairs.length+' מתוך '+wanted+' זוגות. הדביקו את המאגר בשדה הזוגות ונסו שוב.';btn.disabled=false;ta.focus();return}f.textContent='יוצר משחק…';const design=savedDesign();const d=await post({action:'create',title:topicName.value.trim(),className:className.value.trim(),subject:subjectName.value.trim(),topic:topicName.value.trim(),palette:design.palette,pattern:design.pattern,requestedPairs:wanted,pairs},false);const u=teacherUrl(d.code,d.teacherToken);localStorage.setItem('pairs-domino-last-teacher',u);location.href=u}catch(e){f.className='feedback bad';f.textContent=e.code==='not_enough_pairs'?'אין מספיק זוגות ביחס למספר שבחרת.':'לא ניתן ליצור משחק כרגע.';btn.disabled=false;refresh()}};
+ btn.onclick=async()=>{const f=document.getElementById('homeFeedback'),wanted=Math.max(4,Math.min(40,Number(wantedPairs.value)||20));btn.disabled=true;f.className='feedback';try{let current=ta.value.trim();if(!current){f.textContent='טוען את המאגר…';let t='';try{if(navigator.clipboard?.readText){t=await Promise.race([navigator.clipboard.readText(),new Promise(resolve=>setTimeout(()=>resolve(''),900))])}}catch{}if(t.trim()){t=t.replace(/^\s*\`\`\`(?:text|txt|plaintext)?\s*/i,'').replace(/\s*\`\`\`\s*$/,'').trim();ta.value=t;current=t}}const pairs=parsePairs(ta.value);refresh();if(pairs.length<wanted){f.className='feedback bad';f.textContent='נמצאו '+pairs.length+' מתוך '+wanted+' זוגות. הדביקו את המאגר בשדה הזוגות ונסו שוב.';btn.disabled=false;ta.focus();return}f.textContent='יוצר משחק…';const design=savedDesign(),mode=savedMode(),runGroups=savedRunGroups();const d=await post({action:'create',title:topicName.value.trim(),className:className.value.trim(),subject:subjectName.value.trim(),topic:topicName.value.trim(),palette:design.palette,pattern:design.pattern,mode,groups:mode==='run'?runGroups.names.map(name=>({name})):[],requestedPairs:wanted,pairs},false);const u=teacherUrl(d.code,d.teacherToken);localStorage.setItem('pairs-domino-last-teacher',u);location.href=u}catch(e){f.className='feedback bad';f.textContent=e.code==='not_enough_pairs'?'אין מספיק זוגות ביחס למספר שבחרת.':'לא ניתן ליצור משחק כרגע.';btn.disabled=false;refresh()}};
  if(last)document.getElementById('resumeLast').onclick=()=>location.href=last;
 }
+
+function runProgressCard(team,livePlayers=[]){
+ const roster=(livePlayers||[]).filter(p=>p.groupId===team.id);
+ const done=Number(team.chainCount||0),total=Number(team.total||0),pct=total?Math.round(done/total*100):0;
+ return '<section class="run-team-card"><div class="run-team-head"><div><span class="run-team-label">קבוצה</span><h3>'+esc(team.name)+'</h3></div><strong>'+done+' / '+total+'</strong></div><div class="run-progress"><span style="width:'+pct+'%"></span></div><div class="run-team-roster">'+(roster.length?roster.map(p=>'<span class="chip">'+esc(p.name)+'</span>').join(''):'<span class="muted">עדיין אין תלמידים בקבוצה.</span>')+'</div></section>';
+}
+function runLobbyCard(group,players=[]){
+ const roster=(players||[]).filter(p=>p.groupId===group.id);
+ return '<section class="run-team-card lobby"><div class="run-team-head"><div><span class="run-team-label">קבוצה</span><h3>'+esc(group.name)+'</h3></div><strong>'+roster.length+' תלמידים</strong></div><div class="run-team-roster">'+(roster.length?roster.map(p=>'<span class="chip">'+esc(p.name)+'</span>').join(''):'<span class="muted">ממתינים לתלמידים…</span>')+'</div></section>';
+}
+async function renderRunTeacher(d){
+ const players=d.players||[],groups=d.groups||[],teams=d.runTeams||[];
+ const empty=groups.filter(g=>!players.some(p=>p.groupId===g.id));
+ root.innerHTML='<div class="shell run-teacher-shell">'+hero(d.className?'DomiKnow Run · '+d.className:'DomiKnow Run',d.title)+
+ '<section class="card"><div class="teacher-top"><div><div class="status"><span class="dot '+(d.phase==='playing'?'on':'')+'"></span>'+(d.phase==='lobby'?'ממתינים לקבוצות':d.phase==='playing'?'המרוץ פעיל':'המרוץ הושלם')+'</div><h2>קוד כיתה</h2><div class="code">'+esc(code)+'</div></div><div class="joinbox"><div class="qr"><img alt="QR למשחק" src="/api/qr?text='+encodeURIComponent(joinUrl())+'"></div><div><strong>כניסת תלמידים</strong><div class="linkbox">'+esc(joinUrl())+'</div><div class="btns"><button class="btn ghost" id="copyJoin">העתקת קישור</button><button class="btn ghost" id="openProjector">פתיחת מקרן</button></div></div></div></div></section>'+
+ '<section class="card run-board"><div class="run-board-title"><div><span class="setup-mode-pill">DomiKnow Run</span><h2>'+(d.phase==='lobby'?'הקבוצות מוכנות למרוץ':'התקדמות הקבוצות')+'</h2></div>'+(d.winnerTeamName?'<div class="run-winner">🏁 '+esc(d.winnerTeamName)+' סיימה ראשונה</div>':'')+'</div><div class="run-team-grid">'+
+ (d.phase==='lobby'?groups.map(g=>runLobbyCard(g,players)).join(''):teams.map(t=>runProgressCard(t,players)).join(''))+
+ '</div><div class="btns">'+(d.phase==='lobby'?'<button class="btn pri" id="startGame" '+(empty.length?'disabled':'')+'>התחלת המרוץ</button>':'<button class="btn danger" id="resetGame">איפוס המרוץ</button>')+'<button class="btn ghost" id="newRoster">ניקוי תלמידים</button></div>'+
+ (empty.length?'<div class="feedback bad">כדי להתחיל, צריך לפחות תלמיד אחד בכל קבוצה.</div>':'')+'</section></div>';
+ document.getElementById('copyJoin').onclick=async()=>{try{await navigator.clipboard.writeText(joinUrl());toast('הקישור הועתק')}catch{}};
+ document.getElementById('openProjector').onclick=()=>window.open(projectorUrl(),'_blank','noopener');
+ const s=document.getElementById('startGame');if(s)s.onclick=async()=>{s.disabled=true;try{await post({action:'start',teacherToken:token});renderTeacher()}catch(e){toast(e.code==='empty_group'?'יש קבוצה ללא תלמידים':e.code==='no_players'?'אין עדיין תלמידים':'לא ניתן להתחיל');s.disabled=false}};
+ const r=document.getElementById('resetGame');if(r)r.onclick=async()=>{if(confirm('לאפס את המרוץ ולחזור ללובי?')){await post({action:'reset',teacherToken:token});renderTeacher()}};
+ document.getElementById('newRoster').onclick=async()=>{if(confirm('למחוק את רשימת התלמידים ולפתוח לובי חדש?')){await post({action:'newRoster',teacherToken:token});renderTeacher()}};
+ startPoll(async()=>{try{
+   const n=await get({teacherToken:token});
+   if(n.phase==='playing'){try{await post({action:'tick',teacherToken:token})}catch{}}
+   if(n.version!==d.version)stableRerender(renderTeacher);
+ }catch{}});
+}
+function runJoinForm(saved,d){
+ const groups=d.groups||[];
+ root.innerHTML='<div class="shell student-shell">'+hero('מצטרפים למרוץ הקבוצות','DomiKnow Run')+
+ '<section class="card nameform"><span class="setup-mode-pill">DomiKnow Run</span><h2>כניסה למשחק</h2><p class="muted">כתבו שם ובחרו את הקבוצה שלכם.</p><input id="playerName" maxlength="24" autocomplete="name" placeholder="השם שלי" value="'+esc(saved||'')+'"><div class="student-group-grid">'+groups.map((g,i)=>'<button type="button" class="student-group-choice" data-group-id="'+esc(g.id)+'"><span>'+(i+1)+'</span><strong>'+esc(g.name)+'</strong></button>').join('')+'</div><button class="btn pri" id="joinGame" disabled>כניסה ללובי</button><div class="feedback" id="joinFeedback"></div></section></div>';
+ let selected='';
+ document.querySelectorAll('[data-group-id]').forEach(b=>b.onclick=()=>{selected=b.dataset.groupId;document.querySelectorAll('[data-group-id]').forEach(x=>x.classList.toggle('selected',x===b));document.getElementById('joinGame').disabled=false});
+ document.getElementById('joinGame').onclick=async()=>{const name=document.getElementById('playerName').value.trim();if(!name){document.getElementById('joinFeedback').textContent='כתבו שם פרטי.';return}if(!selected){document.getElementById('joinFeedback').textContent='בחרו קבוצה.';return}try{await post({action:'join',playerId:pid,name,groupId:selected});localStorage.setItem('pairs-domino-name',name);renderStudent()}catch(e){document.getElementById('joinFeedback').textContent=e.code==='game_started'?'המשחק כבר התחיל.':'לא ניתן להצטרף כרגע.'}};
+}
+async function renderRunStudent(d,saved){
+ if(!d.joined&&d.phase==='lobby'){runJoinForm(saved,d);return}
+ if(d.phase==='lobby'){
+  root.innerHTML='<div class="shell student-shell">'+hero('מחכים שהמרוץ יתחיל','DomiKnow Run')+'<section class="card waiting run-waiting"><span class="setup-mode-pill">'+esc(d.teamName||'DomiKnow Run')+'</span><strong>את/ה בלובי ✓</strong><span>מחכים למורה שיזניק את המרוץ.</span></section></div>';
+  startPoll(async()=>{try{const n=await get({playerId:pid});if(n.phase!==d.phase)stableRerender(renderStudent)}catch{}});return;
+ }
+ if(d.teamPhase==='complete'){
+  root.innerHTML='<div class="shell student-shell">'+hero('הקבוצה השלימה את השרשרת','DomiKnow Run')+'<section class="card run-team-complete"><div class="complete-mark">✓</div><span class="setup-mode-pill">'+esc(d.teamName||'הקבוצה שלי')+'</span><h2>סיימתם את כל המושגים!</h2><p class="muted">כל הקוביות של הקבוצה חוברו. אפשר לעקוב אחרי שאר הקבוצות על המקרן.</p></section></div>';
+  if(d.phase!=='complete')startPoll(async()=>{try{const n=await get({playerId:pid});if(n.version!==d.version)stableRerender(renderStudent)}catch{}});return;
+ }
+ if(!d.myTile){
+  root.innerHTML='<div class="shell student-shell">'+hero('המרוץ ממשיך','DomiKnow Run')+'<section class="card waiting run-waiting"><span class="setup-mode-pill">'+esc(d.teamName||'הקבוצה שלי')+'</span><strong>ממתינים לקובייה הבאה</strong><span>הקבוצה שלך: '+Number(d.teamChainCount||0)+' / '+Number(d.teamTotal||0)+' חוברו</span></section></div>';
+  startPoll(async()=>{try{const n=await get({playerId:pid});if(n.version!==d.version)stableRerender(renderStudent)}catch{}});return;
+ }
+ const pct=d.teamTotal?Math.round((d.teamChainCount||0)/d.teamTotal*100):0;
+ root.innerHTML='<div class="shell student-shell">'+hero('הקובייה של הקבוצה שלך','DomiKnow Run')+
+ '<section class="card run-student-card"><div class="run-student-head"><span class="setup-mode-pill">'+esc(d.teamName||'הקבוצה שלי')+'</span><strong id="runStudentProgress">'+Number(d.teamChainCount||0)+' / '+Number(d.teamTotal||0)+' חוברו</strong></div><div class="run-progress"><span id="runStudentBar" style="width:'+pct+'%"></span></div><div class="open-clue" id="studentClue"><span>ההתאמה הפתוחה של הקבוצה</span><b id="studentClueText">'+esc(d.currentClue||'')+'</b></div><div class="my-tile" id="studentTile">'+tile(d.myTile)+'</div><div class="match-action"><button class="btn pri" id="playTile">זה מתאים — חיבור הקובייה</button><div class="feedback" id="playFeedback"></div></div></section></div>';
+ document.getElementById('playTile').onclick=async()=>{const b=document.getElementById('playTile'),f=document.getElementById('playFeedback');b.disabled=true;try{const x=await post({action:'play',playerId:pid});if(x.correct){playSuccessSound();showSuccessMoment('התאמה נכונה');f.className='feedback ok';f.textContent='הקובייה התחברה לקבוצה ✓';setTimeout(()=>stableRerender(renderStudent),650)}else{f.className='feedback bad';f.textContent='עדיין לא — זו לא ההתאמה הפתוחה.';b.disabled=false}}catch{b.disabled=false}};
+ fitDominoText();
+ startPoll(async()=>{try{
+   const n=await get({playerId:pid});
+   if(n.phase!==d.phase||n.teamPhase!==d.teamPhase){stableRerender(renderStudent);return}
+   const oldTile=d.myTile?.id||null,newTile=n.myTile?.id||null;
+   if(oldTile!==newTile){stableRerender(renderStudent);return}
+   const clue=document.getElementById('studentClueText');if(clue)clue.textContent=n.currentClue||'';
+   const prog=document.getElementById('runStudentProgress');if(prog)prog.textContent=Number(n.teamChainCount||0)+' / '+Number(n.teamTotal||0)+' חוברו';
+   const bar=document.getElementById('runStudentBar');if(bar)bar.style.width=(n.teamTotal?Math.round((n.teamChainCount||0)/n.teamTotal*100):0)+'%';
+   d.currentClue=n.currentClue;d.teamChainCount=n.teamChainCount;d.version=n.version;
+ }catch{}});
+}
 async function renderTeacher(){
- try{const d=await get({teacherToken:token});applyDesign(d);if(!d.teacher)throw new Error('auth');localStorage.setItem('pairs-domino-last-teacher',location.href);const players=d.players||[],spectators=Math.max(0,players.length-(d.tileCount-1));
+ try{const d=await get({teacherToken:token});applyDesign(d);if(!d.teacher)throw new Error('auth');localStorage.setItem('pairs-domino-last-teacher',location.href);if(d.mode==='run'){await renderRunTeacher(d);return}const players=d.players||[],spectators=Math.max(0,players.length-(d.tileCount-1));
  root.innerHTML='<div class="shell">'+hero(d.className?'מסך מורה · '+d.className:'מסך מורה',d.title)+'<section class="card"><div class="teacher-top"><div><div class="status"><span class="dot '+(d.phase==='playing'?'on':'')+'"></span>'+(d.phase==='lobby'?'ממתינים לתלמידים':d.phase==='playing'?'המשחק פעיל':'המשחק הושלם')+'</div><h2>קוד כיתה</h2><div class="code">'+esc(code)+'</div></div><div class="joinbox"><div class="qr"><img alt="QR למשחק" src="/api/qr?text='+encodeURIComponent(joinUrl())+'"></div><div><strong>כניסת תלמידים</strong><div class="linkbox">'+esc(joinUrl())+'</div><div class="btns"><button class="btn ghost" id="copyJoin">העתקת קישור</button><button class="btn ghost" id="openProjector">פתיחת מקרן</button></div></div></div></div></section>'+
  '<div class="grid"><section class="card"><h2>תלמידים מחוברים: '+players.length+'</h2><div class="roster">'+(players.length?players.map(p=>'<span class="chip">'+esc(p.name)+'</span>').join(''):'<span class="muted">עדיין אין תלמידים בלובי.</span>')+'</div>'+(spectators?'<div class="tiny note">'+spectators+' תלמידים יהיו צופים בסבב הזה.</div>':'')+'<div class="btns">'+(d.phase==='lobby'?'<button class="btn pri" id="startGame" '+(!players.length?'disabled':'')+'>התחלת המשחק וחלוקת קוביות</button>':'<button class="btn danger" id="resetGame">איפוס המשחק</button>')+'<button class="btn ghost" id="newRoster">ניקוי תלמידים</button></div></section><section class="card"><h2>מצב השרשרת</h2>'+progress(d.chainCount||0,d.tileCount)+(d.currentClue?'<div class="open-clue"><span>ההתאמה הפתוחה</span>'+esc(d.currentClue)+'</div>':'')+'<div class="tiny note">'+d.pairCount+' זוגות · '+d.tileCount+' קוביות</div><div class="turn-timer" id="turnTimer"></div></section></div>'+
  '<section class="card"><h2>השרשרת המשותפת</h2>'+chainHtml(d.chain||[])+(d.phase==='complete'?complete():'')+'</section></div>';
@@ -223,12 +291,12 @@ async function renderProjector(){
  root.innerHTML='<div class="shell">'+hero(d.className?'תצוגת מקרן · '+d.className:'תצוגת מקרן',d.title)+'<section class="card"><div class="teacher-top"><div><div class="eyebrow">קוד כיתה</div><div class="code">'+esc(code)+'</div></div><div class="joinbox"><div class="qr"><img alt="QR" src="/api/qr?text='+encodeURIComponent(joinUrl())+'"></div><div><strong>'+(d.phase==='lobby'?'סרקו והצטרפו ללובי':d.phase==='playing'?'מי מחזיק את ההתאמה?':'המשחק הסתיים')+'</strong><div class="muted">'+(d.players||[]).length+' תלמידים מחוברים</div></div></div></div>'+(d.currentClue?'<div class="open-clue projector-clue"><span>ההתאמה הפתוחה</span>'+esc(d.currentClue)+'</div>':'')+'<div class="turn-timer projector-turn-timer" id="turnTimer"></div>'+progress(d.chainCount||0,d.tileCount)+'</section><section class="card">'+chainHtml((d.chain||[]).slice(-5))+(d.lastPlayer?'<div class="feedback ok last-player">✓ '+esc(d.lastPlayer)+' חיבר/ה את הקובייה האחרונה</div>':'')+(d.phase==='complete'?complete():'')+'</section></div>';
  fitDominoText();updateTurnTimer(d);startPoll(async()=>{try{const n=await get({teacherToken:token});updateTurnTimer(n);if(n.chainCount>d.chainCount){playSuccessSound();showSuccessMoment('נוצר חיבור')}if(turnTiming(n).rotate){const x=await post({action:'tick',teacherToken:token});if(x.rotated){stableRerender(renderProjector);return}}if(n.version!==d.version)stableRerender(renderProjector)}catch{}})}catch{root.innerHTML='<div class="shell">'+hero()+'<section class="card"><h2>לא ניתן לפתוח תצוגת מקרן</h2></section></div>'}
 }
-function joinForm(saved,title='דומינו זוגות'){
+function joinForm(saved,title='דומינו זוגות',data=null){if(data?.mode==='run'){runJoinForm(saved,data);return}
  root.innerHTML='<div class="shell student-shell">'+hero('קובייה אחת. התאמה אחת. רגע אחד נכון.',title)+'<section class="card nameform"><h2>כניסה למשחק</h2><p class="muted">כתבו שם פרטי. לאחר שהמורה יתחיל תקבלו קובייה. לחצו כאשר הצד הימני של הקובייה שלכם מתאים להתאמה הפתוחה.</p><input id="playerName" maxlength="24" autocomplete="name" placeholder="השם שלי" value="'+esc(saved||'')+'"><button class="btn pri" id="joinGame">כניסה ללובי</button><div class="feedback" id="joinFeedback"></div></section></div>';
  document.getElementById('joinGame').onclick=async()=>{const name=document.getElementById('playerName').value.trim();if(!name){document.getElementById('joinFeedback').textContent='כתבו שם פרטי.';return}try{await post({action:'join',playerId:pid,name});localStorage.setItem('pairs-domino-name',name);renderStudent()}catch(e){document.getElementById('joinFeedback').textContent=e.code==='game_started'?'המשחק כבר התחיל.':'לא ניתן להצטרף כרגע.'}}
 }
 async function renderStudent(){
- try{const d=await get({playerId:pid}),saved=localStorage.getItem('pairs-domino-name')||'';applyDesign(d);if(!d.joined&&d.phase==='lobby'){joinForm(saved,d.title);return}
+ try{const d=await get({playerId:pid}),saved=localStorage.getItem('pairs-domino-name')||'';applyDesign(d);if(d.mode==='run'){await renderRunStudent(d,saved);return}if(!d.joined&&d.phase==='lobby'){joinForm(saved,d.title,d);return}
  if(d.phase==='lobby'){root.innerHTML='<div class="shell student-shell">'+hero('הצטרפת. מחכים שהמורה יתחיל.',d.title)+'<section class="card waiting">את/ה בלובי ✓</section></div>';startPoll(async()=>{try{const n=await get({playerId:pid});if(n.phase!==d.phase)stableRerender(renderStudent)}catch{}});return}
  if(!d.myTile&&d.phase!=='complete'){root.innerHTML='<div class="shell student-shell">'+hero('את/ה צופה בסבב הזה.',d.title)+'<section class="card waiting">אין לך כרגע קובייה. עקבו אחרי השרשרת על המקרן.</section></div>';startPoll(async()=>{try{const n=await get({playerId:pid});if(n.phase!==d.phase||!!n.myTile!==!!d.myTile)stableRerender(renderStudent)}catch{}});return}
  if(d.phase==='complete'){root.innerHTML='<div class="shell student-shell">'+hero('השרשרת הושלמה!',d.title)+'<section class="card">'+complete()+'</section></div>';return}
