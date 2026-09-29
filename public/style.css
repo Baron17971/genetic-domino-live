@@ -1303,3 +1303,40 @@ html[data-domino-pattern="sparkles"] .domino-half:last-child::before{
   right:auto !important;
   top:4% !important;
 }
+
+
+/* v40 — real game tile: slimmer proportions + preserve artwork aspect */
+.my-tile{
+  height:180px;
+}
+@media(max-width:760px){
+  .my-tile{height:164px}
+}
+
+/* Only on the student's live tile: keep uploaded artwork proportional instead of stretching vertically */
+html[data-domino-pattern="leaves"] .my-tile .domino-half::before,
+html[data-domino-pattern="ribbons"] .my-tile .domino-half::before,
+html[data-domino-pattern="hearts"] .my-tile .domino-half::before,
+html[data-domino-pattern="flowers"] .my-tile .domino-half::before,
+html[data-domino-pattern="sparkles"] .my-tile .domino-half::before{
+  width:206% !important;
+  height:100% !important;
+  background-size:auto 100% !important;
+  background-repeat:no-repeat !important;
+}
+
+/* preserve the existing asymmetric anchoring on the live tile */
+html[data-domino-pattern="leaves"] .my-tile .domino-half:first-child::before,
+html[data-domino-pattern="ribbons"] .my-tile .domino-half:first-child::before,
+html[data-domino-pattern="hearts"] .my-tile .domino-half:first-child::before,
+html[data-domino-pattern="flowers"] .my-tile .domino-half:first-child::before,
+html[data-domino-pattern="sparkles"] .my-tile .domino-half:first-child::before{
+  background-position:right top !important;
+}
+html[data-domino-pattern="leaves"] .my-tile .domino-half:last-child::before,
+html[data-domino-pattern="ribbons"] .my-tile .domino-half:last-child::before,
+html[data-domino-pattern="hearts"] .my-tile .domino-half:last-child::before,
+html[data-domino-pattern="flowers"] .my-tile .domino-half:last-child::before,
+html[data-domino-pattern="sparkles"] .my-tile .domino-half:last-child::before{
+  background-position:left bottom !important;
+}
