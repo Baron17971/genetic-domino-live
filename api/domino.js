@@ -16,7 +16,7 @@ async function body(req){if(req.body&&typeof req.body==='object')return req.body
 function shuffle(a){const x=[...a];for(let i=x.length-1;i>0;i--){const j=crypto.randomInt(i+1);[x[i],x[j]]=[x[j],x[i]];}return x;}
 function normalisePairs(raw){
  if(!Array.isArray(raw)) return [];
- return raw.map(p=>({left:clean(p?.left,100),right:clean(p?.right,160)})).filter(p=>p.left&&p.right).slice(0,31);
+ return raw.map(p=>({left:clean(p?.left,100),right:clean(p?.right,160)})).filter(p=>p.left&&p.right).slice(0,40);
 }
 function makeTiles(pairs){
  if(!pairs.length)return[];
@@ -43,8 +43,10 @@ export default async function handler(req,res){
   const b=req.method==='POST'?await body(req):{};
   const action=req.method==='POST'?clean(b.action,30):'';
   if(req.method==='POST'&&action==='create'){
-   const pairs=normalisePairs(b.pairs);
-   if(pairs.length<4)return res.status(400).json({error:'not_enough_pairs'});
+   const allPairs=normalisePairs(b.pairs);
+   const requestedPairs=Math.max(4,Math.min(40,Number(b.requestedPairs)||20));
+   if(allPairs.length<requestedPairs)return res.status(400).json({error:'not_enough_pairs'});
+   const pairs=allPairs.slice(0,requestedPairs);
    let code='';for(let i=0;i<10;i++){const c=newCode();if(!await room(c)){code=c;break;}}
    if(!code)return res.status(503).json({error:'code'});
    const now=Date.now();
