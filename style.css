@@ -557,3 +557,18 @@ input:focus,textarea:focus{
    object-fit:cover;
  }
 }
+
+/* Open clue: smoky sage with light type */
+.open-clue{
+  background:linear-gradient(135deg,#6F8377,#7D9084);
+  border-color:rgba(255,253,248,.28);
+  color:#FFFDF8;
+  box-shadow:0 10px 24px rgba(55,73,64,.10);
+}
+.open-clue span{
+  color:rgba(255,253,248,.78);
+}
+.open-clue b,
+.projector-clue{
+  color:#FFFDF8;
+}
