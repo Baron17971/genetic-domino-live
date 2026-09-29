@@ -1340,3 +1340,25 @@ html[data-domino-pattern="flowers"] .my-tile .domino-half:last-child::before,
 html[data-domino-pattern="sparkles"] .my-tile .domino-half:last-child::before{
   background-position:left bottom !important;
 }
+
+
+/* v42 — no-background choice in pattern picker */
+.design-pattern.pattern-none .pattern-demo{
+  background:#E9EDF1 !important;
+  border:1px dashed rgba(44,72,96,.22);
+  position:relative;
+}
+.design-pattern.pattern-none .pattern-demo::after{
+  content:"ללא רקע";
+  position:absolute;
+  inset:0;
+  display:grid;
+  place-items:center;
+  color:#5B6B79;
+  font-size:.92rem;
+  font-weight:700;
+}
+html[data-domino-pattern="none"] .domino-half::before,
+html[data-domino-pattern="none"] .domino-half::after{
+  display:none !important;
+}
