@@ -1370,3 +1370,45 @@ html[data-domino-pattern="none"] .domino-half::after{
     grid-column:auto !important;
   }
 }
+
+
+/* v45 — game mode + DomiKnow Run groups setup */
+.mode-card,.groups-card{max-width:900px;margin:18px auto 0}
+.mode-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:18px}
+.mode-choice{
+  position:relative;text-align:right;border:1px solid #D8D0C6;border-radius:24px;background:#FFFDF9;
+  padding:22px;min-height:190px;display:flex;flex-direction:column;gap:10px;cursor:pointer;
+  box-shadow:0 10px 26px rgba(24,38,52,.08);color:#1E3448
+}
+.mode-choice strong{font-size:1.35rem}
+.mode-choice>span:not(.mode-badge){line-height:1.55;color:#66727B}
+.mode-choice b{margin-top:auto;font-size:.9rem;color:#35566F}
+.mode-choice.selected{border-color:#35566F;box-shadow:0 0 0 2px rgba(53,86,111,.12),0 14px 30px rgba(24,38,52,.10)}
+.mode-choice.run{background:linear-gradient(180deg,#FFFDF9,#F7F2E9)}
+.mode-badge{
+  align-self:flex-start;padding:6px 10px;border-radius:999px;background:#E7EEF2;color:#35566F;font-size:.8rem;font-weight:800
+}
+.mode-choice.run .mode-badge{background:#E6F0ED;color:#42675F}
+.group-count{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:18px 0}
+.group-count-btn{
+  border:1px solid #D8D0C6;background:#FFFDF9;color:#35566F;border-radius:16px;padding:14px 10px;font-weight:800;cursor:pointer
+}
+.group-count-btn.selected{background:#35566F;color:#fff;border-color:#35566F;box-shadow:0 8px 18px rgba(53,86,111,.18)}
+.group-names{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}
+.group-name-field{
+  background:#F8F5EF;border:1px solid #E3DBD0;border-radius:18px;padding:14px;display:grid;gap:8px
+}
+.group-name-field>span{font-weight:800;color:#35566F;display:flex;align-items:center;gap:8px}
+.group-name-field i{
+  width:26px;height:26px;border-radius:50%;display:grid;place-items:center;background:#E7EEF2;font-style:normal;font-size:.8rem
+}
+.groups-next{width:100%;margin-top:18px;font-weight:800}
+.setup-mode-pill{
+  display:inline-flex;padding:6px 10px;border-radius:999px;background:#E7EEF2;color:#35566F;font-size:.8rem;font-weight:800;margin-bottom:12px
+}
+@media(max-width:760px){
+  .mode-grid,.group-names{grid-template-columns:1fr}
+  .mode-choice{min-height:0}
+  .group-count{grid-template-columns:repeat(3,1fr);gap:8px}
+  .group-count-btn{padding:12px 6px;font-size:.9rem}
+}
