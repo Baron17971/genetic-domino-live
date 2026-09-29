@@ -627,3 +627,7 @@ input:focus,textarea:focus{
 
 /* Keep live lobby DOM updates from triggering browser scroll anchoring. */
 html,body,#dominoApp,.shell,.card,.roster{overflow-anchor:none}
+
+
+/* Student play action must never shift viewport. */
+.match-action,.match-action .feedback,.success-moment{overflow-anchor:none}
