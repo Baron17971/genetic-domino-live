@@ -507,3 +507,53 @@ input:focus,textarea:focus{
   .my-tile .domino-half{font-size:1.26rem;padding:12px 10px}
   .domino.compact .domino-half{font-size:.98rem}
 }
+
+/* DomiKnow branded top banner */
+.sr-only{
+ position:absolute!important;
+ width:1px!important;height:1px!important;
+ padding:0!important;margin:-1px!important;
+ overflow:hidden!important;clip:rect(0,0,0,0)!important;
+ white-space:nowrap!important;border:0!important
+}
+.hero.hero-image{
+ min-height:0;
+ height:auto;
+ padding:0;
+ display:block;
+ border-radius:28px;
+ overflow:hidden;
+ background:#F7F2E9;
+ border:1px solid rgba(53,86,111,.08);
+ box-shadow:0 14px 34px rgba(30,52,72,.08);
+}
+.hero.hero-image:before,
+.hero.hero-image:after{display:none}
+.hero.hero-image picture,
+.hero.hero-image img{
+ display:block;
+ width:100%;
+ height:auto;
+ margin:0;
+}
+@media(min-width:761px){
+ .hero.hero-image{
+   border-radius:30px;
+ }
+ .hero.hero-image img{
+   width:100%;
+   max-height:360px;
+   object-fit:cover;
+   object-position:center;
+ }
+}
+@media(max-width:760px){
+ .hero.hero-image{
+   border-radius:24px;
+ }
+ .hero.hero-image img{
+   width:100%;
+   height:auto;
+   object-fit:cover;
+ }
+}
