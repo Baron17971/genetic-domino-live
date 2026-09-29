@@ -260,23 +260,37 @@ async function renderRunStudent(d,saved){
   if(d.phase!=='complete')startPoll(async()=>{try{const n=await get({playerId:pid});if(n.version!==d.version)stableRerender(renderStudent)}catch{}});return;
  }
  if(!d.myTile){
-  root.innerHTML='<div class="shell student-shell">'+hero('המרוץ ממשיך','DomiKnow Run')+'<section class="card waiting run-waiting"><span class="setup-mode-pill">'+esc(d.teamName||'הקבוצה שלי')+'</span><strong>ממתינים לקובייה הבאה</strong><span>הקבוצה שלך: '+Number(d.teamChainCount||0)+' / '+Number(d.teamTotal||0)+' חוברו</span></section></div>';
+  root.innerHTML='<div class="shell student-shell">'+hero('המרוץ ממשיך','DomiKnow Run')+'<section class="card waiting run-waiting"><span class="setup-mode-pill">'+esc(d.teamName||'הקבוצה שלי')+'</span><strong>ממתינים לקובייה הבאה</strong><span>הקבוצה שלך: '+Number(d.teamChainCount||0)+' מתוך '+Number(d.teamTotal||0)+' חוברו</span></section></div>';
   startPoll(async()=>{try{const n=await get({playerId:pid});if(n.version!==d.version)stableRerender(renderStudent)}catch{}});return;
  }
  const pct=d.teamTotal?Math.round((d.teamChainCount||0)/d.teamTotal*100):0;
  root.innerHTML='<div class="shell student-shell">'+hero('הקובייה של הקבוצה שלך','DomiKnow Run')+
  '<section class="card run-student-card"><div class="run-student-head"><span class="setup-mode-pill">'+esc(d.teamName||'הקבוצה שלי')+'</span><strong id="runStudentProgress">'+Number(d.teamChainCount||0)+' מתוך '+Number(d.teamTotal||0)+' חוברו</strong></div><div class="run-progress"><span id="runStudentBar" style="width:'+pct+'%"></span></div><div class="open-clue" id="studentClue"><span>ההתאמה הפתוחה של הקבוצה</span><b id="studentClueText">'+esc(d.currentClue||'')+'</b></div><div class="my-tile" id="studentTile">'+tile(d.myTile)+'</div><div class="match-action"><button class="btn pri" id="playTile">זה מתאים — חיבור הקובייה</button><div class="feedback" id="playFeedback"></div></div></section></div>';
- document.getElementById('playTile').onclick=async()=>{const b=document.getElementById('playTile'),f=document.getElementById('playFeedback');b.disabled=true;try{const x=await post({action:'play',playerId:pid});if(x.correct){playSuccessSound();showSuccessMoment('התאמה נכונה');f.className='feedback ok';f.textContent='הקובייה התחברה לקבוצה ✓';setTimeout(()=>stableRerender(renderStudent),650)}else{f.className='feedback bad';f.textContent='עדיין לא — זו לא ההתאמה הפתוחה.';b.disabled=false}}catch{b.disabled=false}};
+ document.getElementById('playTile').onclick=async()=>{const b=document.getElementById('playTile'),f=document.getElementById('playFeedback'),sx=window.scrollX,sy=window.scrollY;b.disabled=true;try{const x=await post({action:'play',playerId:pid});if(x.correct){playSuccessSound();showSuccessMoment('התאמה נכונה');f.className='feedback ok';f.textContent='הקובייה התחברה לקבוצה ✓';b.textContent='הקובייה חוברה ✓';requestAnimationFrame(()=>window.scrollTo(sx,sy));setTimeout(async()=>{try{const n=await get({playerId:pid});if(n.phase!==d.phase||n.teamPhase!==d.teamPhase){stableRerender(renderStudent);return}const oldTile=d.myTile?.id||null,newTile=n.myTile?.id||null;const clue=document.getElementById('studentClueText');if(clue)clue.textContent=n.currentClue||'';const prog=document.getElementById('runStudentProgress');if(prog)prog.textContent=Number(n.teamChainCount||0)+' מתוך '+Number(n.teamTotal||0)+' חוברו';const bar=document.getElementById('runStudentBar');if(bar)bar.style.width=(n.teamTotal?Math.round((n.teamChainCount||0)/n.teamTotal*100):0)+'%';if(oldTile!==newTile){const tileBox=document.getElementById('studentTile');if(n.myTile&&tileBox){tileBox.innerHTML=tile(n.myTile);d.myTile=n.myTile;b.textContent='זה מתאים — חיבור הקובייה';b.disabled=false;f.className='feedback';f.textContent='';fitDominoText()}else if(tileBox){tileBox.innerHTML='<div class="waiting">ממתינים לקובייה הבאה</div>';d.myTile=null;b.disabled=true;b.textContent='ממתינים לקובייה'}}d.currentClue=n.currentClue;d.teamChainCount=n.teamChainCount;d.teamTotal=n.teamTotal;d.version=n.version;requestAnimationFrame(()=>window.scrollTo(sx,sy))}catch{}},650)}else{f.className='feedback bad';f.textContent='עדיין לא — זו לא ההתאמה הפתוחה.';b.disabled=false;requestAnimationFrame(()=>window.scrollTo(sx,sy))}}catch{b.disabled=false;requestAnimationFrame(()=>window.scrollTo(sx,sy))}};
  fitDominoText();
  startPoll(async()=>{try{
    const n=await get({playerId:pid});
    if(n.phase!==d.phase||n.teamPhase!==d.teamPhase){stableRerender(renderStudent);return}
    const oldTile=d.myTile?.id||null,newTile=n.myTile?.id||null;
-   if(oldTile!==newTile){stableRerender(renderStudent);return}
-   const clue=document.getElementById('studentClueText');if(clue)clue.textContent=n.currentClue||'';
+   const clue=document.getElementById('studentClueText');if(clue&&n.currentClue!==d.currentClue)clue.textContent=n.currentClue||'';
    const prog=document.getElementById('runStudentProgress');if(prog)prog.textContent=Number(n.teamChainCount||0)+' מתוך '+Number(n.teamTotal||0)+' חוברו';
    const bar=document.getElementById('runStudentBar');if(bar)bar.style.width=(n.teamTotal?Math.round((n.teamChainCount||0)/n.teamTotal*100):0)+'%';
-   d.currentClue=n.currentClue;d.teamChainCount=n.teamChainCount;d.version=n.version;
+   if(oldTile!==newTile){
+     const sx=window.scrollX,sy=window.scrollY,tileBox=document.getElementById('studentTile'),play=document.getElementById('playTile'),feed=document.getElementById('playFeedback');
+     if(n.myTile){
+       if(tileBox)tileBox.innerHTML=tile(n.myTile);
+       d.myTile=n.myTile;
+       if(play){play.textContent='זה מתאים — חיבור הקובייה';play.disabled=false}
+       if(feed){feed.className='feedback';feed.textContent=''}
+       fitDominoText();
+     }else{
+       if(tileBox)tileBox.innerHTML='<div class="waiting">ממתינים לקובייה הבאה</div>';
+       d.myTile=null;
+       if(play){play.disabled=true;play.textContent='ממתינים לקובייה'}
+     }
+     requestAnimationFrame(()=>window.scrollTo(sx,sy));
+   }
+   d.currentClue=n.currentClue;d.teamChainCount=n.teamChainCount;d.teamTotal=n.teamTotal;d.version=n.version;
  }catch{}});
 }
 async function renderTeacher(){
