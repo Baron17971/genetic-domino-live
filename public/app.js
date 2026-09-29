@@ -77,11 +77,11 @@ const palettes=[
  {id:'earth',name:'אדמה',colors:['#4E5B43','#8A6C3D','#A98E66','#6F7C63']}
 ];
 const patterns=[
+ {id:'none',name:'ללא רקע'},
  {id:'leaves',name:'עלים'},
- {id:'ribbons',name:'סרטים'},
- {id:'hearts',name:'לבבות'},
  {id:'flowers',name:'פרחים'},
- {id:'sparkles',name:'ניצוצות'}
+ {id:'hearts',name:'לבבות'},
+ {id:'ribbons',name:'סרטים'}
 ];
 const patternIds=new Set(patterns.map(p=>p.id));
 function savedDesign(){try{const d=JSON.parse(sessionStorage.getItem(DESIGN_KEY)||'')||{};return{palette:d.palette||'beach',pattern:patternIds.has(d.pattern)?d.pattern:'leaves'}}catch{return{palette:'beach',pattern:'leaves'}}}
