@@ -782,3 +782,63 @@ html[data-domino-pattern="corners"] .domino-half:after{left:7px;bottom:7px;borde
 }
 .domino.pattern-corners .domino-half:before{right:7px;top:7px;border-left:0;border-bottom:0}
 .domino.pattern-corners .domino-half:after{left:7px;bottom:7px;border-right:0;border-top:0}
+
+
+/* v29 — make pattern choice clearly visible in the design preview, while keeping live tiles subtle */
+.design-preview .domino-half{background-blend-mode:screen,screen,normal}
+.design-preview .domino{
+  box-shadow:0 12px 28px rgba(30,52,72,.12);
+}
+
+/* Stronger preview-only pattern visibility */
+html[data-domino-pattern="grid"] .design-preview .domino-half{
+  background-image:
+    linear-gradient(rgba(255,255,255,.18) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(255,255,255,.18) 1px,transparent 1px);
+  background-size:18px 18px;
+}
+html[data-domino-pattern="dots"] .design-preview .domino-half{
+  background-image:
+    radial-gradient(circle at 20% 30%,rgba(255,255,255,.18) 0 18px,transparent 19px),
+    radial-gradient(circle at 74% 66%,rgba(255,255,255,.14) 0 28px,transparent 29px),
+    radial-gradient(circle at 48% 12%,rgba(255,255,255,.10) 0 10px,transparent 11px);
+}
+html[data-domino-pattern="wave"] .design-preview .domino-half{
+  background-image:
+    radial-gradient(ellipse at 4% 6%,transparent 56%,rgba(255,255,255,.17) 57% 60%,transparent 61%),
+    radial-gradient(ellipse at 96% 94%,transparent 56%,rgba(255,255,255,.14) 57% 60%,transparent 61%);
+}
+html[data-domino-pattern="grain"] .design-preview .domino-half{
+  background-image:
+    radial-gradient(rgba(255,255,255,.20) .8px,transparent .9px);
+  background-size:4px 4px;
+}
+html[data-domino-pattern="corners"] .design-preview .domino-half:before,
+html[data-domino-pattern="corners"] .design-preview .domino-half:after{
+  border-color:rgba(255,255,255,.28);
+  width:34px;height:34px;
+}
+
+/* Slightly more visible on live tiles too, but still restrained */
+html[data-domino-pattern="grid"] .domino-half{
+  background-image:
+    linear-gradient(rgba(255,255,255,.09) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(255,255,255,.09) 1px,transparent 1px);
+}
+html[data-domino-pattern="dots"] .domino-half{
+  background-image:
+    radial-gradient(circle at 20% 28%,rgba(255,255,255,.11) 0 18px,transparent 19px),
+    radial-gradient(circle at 76% 68%,rgba(255,255,255,.08) 0 28px,transparent 29px);
+}
+html[data-domino-pattern="wave"] .domino-half{
+  background-image:
+    radial-gradient(ellipse at 10% 10%,transparent 62%,rgba(255,255,255,.10) 63% 65%,transparent 66%),
+    radial-gradient(ellipse at 90% 90%,transparent 62%,rgba(255,255,255,.08) 63% 65%,transparent 66%);
+}
+html[data-domino-pattern="grain"] .domino-half{
+  background-image:radial-gradient(rgba(255,255,255,.14) .65px,transparent .75px);
+}
+html[data-domino-pattern="corners"] .domino-half:before,
+html[data-domino-pattern="corners"] .domino-half:after{
+  border-color:rgba(255,255,255,.16);
+}
