@@ -31,7 +31,9 @@ async function saveRoom(r){await cache().set(roomKey(r.code),r,{ttl:TTL});}
 async function game(code){return (await cache().get(gameKey(code)))||{phase:'lobby',version:1,chainCount:0,chain:[],assignments:{},players:[],lastPlayer:'',turnStartedAt:0,timeoutCount:0};}
 async function save(code,g){await cache().set(gameKey(code),g,{ttl:TTL});}
 async function roster(code){const shards=await Promise.all(Array.from({length:SHARDS},(_,i)=>cache().get(rosterKey(code,i))));const out=[];for(const s of shards)if(s)for(const p of Object.values(s))if(p&&p.id&&p.name)out.push(p);return out.sort((a,b)=>(a.joinedAt||0)-(b.joinedAt||0));}
-async function join(code,id,name,groupId=''){const key=rosterKey(code,hash(id)%SHARDS);for(let a=0;a<5;a++){const cur=await cache().get(key)||{};const next={...cur,[id]:{id,name,groupId:clean(groupId,40),joinedAt:cur[id]?.joinedAt||Date.now()}};await cache().set(key,next,{ttl:TTL});const v=await cache().get(key)||{};if(v[id])return v[id];await new Promise(r=>setTimeout(r,25+a*20));}throw new Error('join_race');}
+async function join(code,id,name,playerToken,rawName,groupId=''){const key=rosterKey(code,hash(id)%SHARDS);for(let a=0;a<5;a++){const cur=await cache().get(key)||{};const next={...cur,[id]:{id,name,rawName:rawName||name,playerToken,groupId:clean(groupId,40),joinedAt:cur[id]?.joinedAt||Date.now()}};await cache().set(key,next,{ttl:TTL});const v=await cache().get(key)||{};if(v[id])return v[id];await new Promise(r=>setTimeout(r,25+a*20));}throw new Error('join_race');}
+function sameName(a,b){return String(a||'').trim().toLocaleLowerCase('he-IL')===String(b||'').trim().toLocaleLowerCase('he-IL');}
+function playerOK(p,t){return !!p&&(!p.playerToken||sameToken(clean(t,140),p.playerToken));}
 async function clearRoster(code){await Promise.all(Array.from({length:SHARDS},(_,i)=>cache().delete(rosterKey(code,i))));}
 function tileBy(tiles,id){return tiles[Number(id)-1]||null;}
 function publicState(g,tiles){const last=g.chainCount?tileBy(tiles,g.chainCount):null;return{phase:g.phase,version:g.version||1,chainCount:g.chainCount||0,chain:(g.chain||[]).map(id=>tileBy(tiles,id)).filter(Boolean),currentClue:last?.right||'',lastPlayer:g.lastPlayer||'',tileCount:tiles.length,turnStartedAt:g.turnStartedAt||0,timeoutCount:g.timeoutCount||0};}
@@ -108,26 +110,31 @@ export default async function handler(req,res){
     out.winnerTeamId=g.winnerTeamId||'';
     out.winnerTeamName=g.winnerTeamName||'';
     if(id){
-      const p=livePlayers.find(x=>x.id===id);out.joined=Boolean(p);
-      if(p){out.groupId=p.groupId||'';out.teamName=(r.groups||[]).find(x=>x.id===p.groupId)?.name||'';}
-      const ps=runPlayerState(g,tiles,id);
-      if(ps)Object.assign(out,ps);
+      const p=livePlayers.find(x=>x.id===id),playerToken=clean(req.query?.playerToken,140);
+      out.joined=Boolean(p&&playerOK(p,playerToken));
+      if(out.joined){out.playerName=p.name||'';out.groupId=p.groupId||'';out.teamName=(r.groups||[]).find(x=>x.id===p.groupId)?.name||'';const ps=runPlayerState(g,tiles,id);if(ps)Object.assign(out,ps);}
     }
     if(!teacher&&id){out.chain=[];out.chainCount=out.teamChainCount||0;}
     out.currentClue=(id&&out.currentClue)||'';
-   }else if(id){const p=livePlayers.find(x=>x.id===id);out.joined=Boolean(p);out.myTile=g.assignments?.[id]?tileBy(tiles,g.assignments[id]):null;}
+   }else if(id){const p=livePlayers.find(x=>x.id===id),playerToken=clean(req.query?.playerToken,140);out.joined=Boolean(p&&playerOK(p,playerToken));out.playerName=out.joined?(p.name||''):'';out.myTile=out.joined&&g.assignments?.[id]?tileBy(tiles,g.assignments[id]):null;}
    return res.json(out);
   }
   if(req.method!=='POST')return res.status(405).json({error:'method'});
   const g=await game(code);
   if(action==='join'){
    if(g.phase!=='lobby')return res.status(409).json({error:'game_started'});
-   const id=clean(b.playerId,140),name=clean(b.name,24);if(!id||!name)return res.status(400).json({error:'bad_player'});
-   const groupId=r.mode==='run'?clean(b.groupId,40):'';if(r.mode==='run'&&!(r.groups||[]).some(x=>x.id===groupId))return res.status(400).json({error:'bad_group'});await join(code,id,name,groupId);g.version=(g.version||1)+1;await save(code,g);r.lastActiveAt=Date.now();await saveRoom(r);return res.json({ok:true});
+   const rawName=clean(b.name,24);if(!rawName)return res.status(400).json({error:'bad_player'});
+   const groupId=r.mode==='run'?clean(b.groupId,40):'';if(r.mode==='run'&&!(r.groups||[]).some(x=>x.id===groupId))return res.status(400).json({error:'bad_group'});
+   const existing=await roster(code),same=existing.filter(p=>sameName(p.rawName||p.name,rawName)).length;
+   const name=same===0?rawName:`${rawName} (${same+1})`,id=crypto.randomUUID(),playerToken=crypto.randomBytes(24).toString('hex');
+   await join(code,id,name,playerToken,rawName,groupId);g.version=(g.version||1)+1;await save(code,g);r.lastActiveAt=Date.now();await saveRoom(r);
+   return res.json({ok:true,playerId:id,playerToken,displayName:name});
   }
   if(action==='play'){
    if(g.phase!=='playing')return res.status(409).json({error:'not_playing'});
    const id=clean(b.playerId,140);
+   const pAuth=(g.players||[]).find(p=>p.id===id)||Object.values(g.runTeams||{}).flatMap(t=>t.players||[]).find(p=>p.id===id)||(await roster(code)).find(p=>p.id===id);
+   if(!playerOK(pAuth,b.playerToken))return res.status(403).json({error:'forbidden'});
    if(r.mode==='run'){
     const team=Object.values(g.runTeams||{}).find(t=>(t.players||[]).some(p=>p.id===id));
     if(!team)return res.status(409).json({error:'no_team'});
