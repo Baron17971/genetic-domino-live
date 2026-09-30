@@ -37,9 +37,10 @@ function restoreDraftSession(d){
  if(d.mode){saveMode(d.mode)}
  if(d.runGroups){saveRunGroups(d.runGroups)}
 }
+function gradeNumber(label){const a=['א׳','ב׳','ג׳','ד׳','ה׳','ו׳','ז׳','ח׳','ט׳','י׳','י״א','י״ב'];const i=a.indexOf(String(label||''));return i>=0?i+1:null}
 async function saveProjectToXsite(payload,projectId=''){
  const s=await requireTeacherAuth(projectId?'?edit='+encodeURIComponent(projectId):'?teacher=1');if(!s)return null;
- const row={teacher_id:s.user.id,app_id:'domiknow',title:payload.topic||'DomiKnow',subject:payload.subject||'',grade:payload.className||'',payload};
+ const row={teacher_id:s.user.id,app_id:'domiknow',title:payload.topic||'DomiKnow',subject:payload.subject||'',grade:gradeNumber(payload.className),payload};
  if(projectId){
    const {error}=await xsiteCore.from('teacher_projects').update(row).eq('id',projectId).eq('teacher_id',s.user.id).eq('app_id','domiknow');
    if(error)throw error;return projectId;
