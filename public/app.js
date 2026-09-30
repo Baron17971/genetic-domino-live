@@ -9,6 +9,50 @@ let playerCred=loadPlayerCredentials(),pid=playerCred.playerId||'',playerToken=p
 const teacherUrl=(c,t)=>location.origin+'/teacher?code='+encodeURIComponent(c)+'&token='+encodeURIComponent(t),joinUrl=()=>location.origin+'/join?code='+encodeURIComponent(code),projectorUrl=()=>location.origin+'/projector?code='+encodeURIComponent(code)+'&token='+encodeURIComponent(token);
 async function get(extra={}){let u='/api/domino?code='+encodeURIComponent(code);for(const[k,v]of Object.entries(extra))if(v)u+='&'+encodeURIComponent(k)+'='+encodeURIComponent(v);const r=await fetch(u,{cache:'no-store'});let d={};try{d=await r.json()}catch{}if(!r.ok){const e=new Error(d.error||'request');e.code=d.error;throw e}return d}
 async function post(body,includeCode=true){const r=await fetch('/api/domino',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(includeCode?{...body,code}:body)});let d={};try{d=await r.json()}catch{}if(!r.ok){const e=new Error(d.error||'request');e.code=d.error;throw e}return d}
+
+const XSITE_URL='https://zydhfhfhspflvhlpmokj.supabase.co';
+const XSITE_KEY='sb_publishable_DJN48TNChvPce3MZ7bDaiw_5Q8Eam6x';
+const xsiteCore=window.supabase?.createClient?window.supabase.createClient(XSITE_URL,XSITE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}}):null;
+const SETUP_DRAFT_KEY='domiknow-teacher-draft-v1';
+
+async function xsiteTeacherSession(){
+ if(!xsiteCore)return null;
+ try{const {data}=await xsiteCore.auth.getSession();return data?.session||null}catch{return null}
+}
+async function requireTeacherAuth(returnQuery='?teacher=1'){
+ const s=await xsiteTeacherSession();if(s)return s;
+ if(!xsiteCore){toast('חיבור Google אינו זמין כרגע');return null}
+ await xsiteCore.auth.signInWithOAuth({provider:'google',options:{redirectTo:'https://domiknow.vercel.app/'+returnQuery,queryParams:{access_type:'offline',prompt:'select_account'}}});
+ return null;
+}
+function loadSetupDraft(){
+ try{return JSON.parse(localStorage.getItem(SETUP_DRAFT_KEY)||'null')||null}catch{return null}
+}
+function saveSetupDraft(data){
+ try{localStorage.setItem(SETUP_DRAFT_KEY,JSON.stringify({...data,updatedAt:Date.now()}))}catch{}
+}
+function restoreDraftSession(d){
+ if(!d)return;
+ if(d.design){saveDesign(d.design)}
+ if(d.mode){saveMode(d.mode)}
+ if(d.runGroups){saveRunGroups(d.runGroups)}
+}
+async function saveProjectToXsite(payload,projectId=''){
+ const s=await requireTeacherAuth(projectId?'?edit='+encodeURIComponent(projectId):'?teacher=1');if(!s)return null;
+ const row={teacher_id:s.user.id,app_id:'domiknow',title:payload.topic||'DomiKnow',subject:payload.subject||'',grade:payload.className||'',payload};
+ if(projectId){
+   const {error}=await xsiteCore.from('teacher_projects').update(row).eq('id',projectId).eq('teacher_id',s.user.id).eq('app_id','domiknow');
+   if(error)throw error;return projectId;
+ }
+ const {data,error}=await xsiteCore.from('teacher_projects').insert(row).select('id').single();
+ if(error)throw error;return data.id;
+}
+async function loadProjectFromXsite(projectId){
+ const s=await requireTeacherAuth('?edit='+encodeURIComponent(projectId));if(!s)return null;
+ const {data,error}=await xsiteCore.from('teacher_projects').select('id,title,payload').eq('id',projectId).eq('teacher_id',s.user.id).eq('app_id','domiknow').maybeSingle();
+ if(error||!data)throw error||new Error('not_found');
+ return data;
+}
 function hero(sub,title='DomiKnow'){return '<section class="hero hero-image" aria-label="'+esc(title)+'"><picture><source media="(max-width:760px)" srcset="/domino-home/top-banner-mobile..png"><img src="/domino-home/top-banner-desktop.png" alt="DomiKnow — כל הכיתה. שרשרת אחת של ידע."></picture><span class="sr-only">'+esc(sub||'')+'</span></section>'}
 function homeVisual(){return '<section class="home-visual" aria-label="DomiKnow — כשידע ומשחק מתחברים"><picture><source media="(max-width:760px)" srcset="/domino-home/domino-home-mobile.png"><img src="/domino-home/domino-home-desktop.png" alt="DomiKnow — משחק דומינו כיתתי"></picture><button type="button" class="home-teacher-hotspot" id="homeTeacherStart" aria-label="כניסת מורה"></button><button type="button" class="home-demo-hotspot" id="homeDemoStart" aria-label="צפו בדוגמה"></button></section>'}
 function tile(t,compact=false){const lc=Number.isInteger(t?.leftColor)?t.leftColor:0,rc=Number.isInteger(t?.rightColor)?t.rightColor:1;return '<div class="domino '+(compact?'compact':'')+'"><div class="domino-half dc-'+lc+'"><span class="domino-half-text">'+esc(t.left)+'</span></div><div class="domino-half dc-'+rc+'"><span class="domino-half-text">'+esc(t.right)+'</span></div></div>'}
