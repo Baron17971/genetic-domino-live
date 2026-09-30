@@ -1571,3 +1571,43 @@ html[data-domino-pattern="none"] .domino-half::after{
     object-position:top center;
   }
 }
+
+/* DomiKnow Run projector race */
+.run-projector-shell{width:min(1440px,calc(100% - 34px))}
+.run-projector-top{display:flex;align-items:center;justify-content:space-between;gap:28px}
+.run-projector-code{display:grid;gap:4px;min-width:220px}
+.run-projector-code>span{font-size:.88rem;color:#71808A}
+.run-projector-code>strong{font-size:clamp(2.6rem,5vw,5rem);line-height:1;color:#27455D;letter-spacing:.08em}
+.run-projector-race{padding:28px}
+.run-projector-title{display:flex;justify-content:space-between;align-items:flex-start;gap:24px;margin-bottom:22px}
+.run-projector-title h2{margin:4px 0 0;font-size:clamp(1.8rem,3.2vw,3rem);color:#203A50}
+.run-projector-order{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end}
+.run-projector-order>span{font-size:.82rem;color:#71808A;font-weight:800}
+.run-projector-order>strong{padding:8px 12px;border-radius:999px;background:#F4F0E7;color:#3D5364;border:1px solid #E1D8CA}
+.run-projector-order .place-1{background:#FFF1C6;border-color:#E7CA68;color:#5E4C0D}
+.run-projector-order .place-2{background:#EFF1F3;border-color:#C8CED3;color:#475159}
+.run-projector-order .place-3{background:#F3E0D3;border-color:#D9B59F;color:#6B4A36}
+.run-projector-order.waiting-order>strong{background:#F7F4EE;color:#7C8790}
+.run-projector-lanes{display:grid;gap:16px}
+.run-projector-lane{display:grid;grid-template-columns:minmax(190px,280px) 1fr 90px;align-items:center;gap:20px;padding:18px 20px;border:1px solid #DED7CC;border-radius:22px;background:linear-gradient(180deg,#FFFDF9,#FAF7F1)}
+.run-projector-lane.complete{border-color:#B9CFC7;background:linear-gradient(180deg,#FFFDF9,#F2F8F5)}
+.run-projector-lane.winner{border-color:#D8C36D;box-shadow:0 0 0 2px rgba(216,195,109,.15)}
+.run-projector-team{display:flex;align-items:center;gap:12px;min-width:0}
+.run-projector-team>div:last-child{display:grid;min-width:0}
+.run-projector-team strong{font-size:clamp(1.15rem,2.2vw,1.75rem);color:#213B50;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.run-projector-team span{font-size:.85rem;color:#6D7B85}
+.run-projector-place{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;background:#E7EEF2;color:#35566F;font-size:1.25rem;font-weight:900;flex:0 0 auto}
+.run-projector-track{position:relative;height:28px;border-radius:999px;background:#E6E0D6;overflow:visible}
+.run-projector-fill{position:absolute;inset:0 auto 0 0;border-radius:inherit;background:linear-gradient(90deg,#7FA49B,#35566F);transition:width .45s ease}
+.run-projector-domino{position:absolute;top:50%;transform:translateY(-50%);width:38px;height:38px;border-radius:10px;background:#FFFDF9;border:2px solid #35566F;display:grid;place-items:center;color:#35566F;font-size:.7rem;letter-spacing:-.18em;transition:right .45s ease;box-shadow:0 5px 12px rgba(53,86,111,.16)}
+.run-projector-finish{position:absolute;left:-2px;top:50%;transform:translate(-100%,-50%);font-size:1.65rem}
+.run-projector-percent{text-align:left;font-size:1.6rem;font-weight:900;color:#35566F}
+.run-projector-winner{margin-top:20px;padding:16px 20px;border-radius:20px;text-align:center;background:linear-gradient(90deg,#FFF1C6,#F7F3DE);border:1px solid #E5CF79;color:#5D4D13;font-size:clamp(1.2rem,2.4vw,1.8rem);font-weight:900}
+.projector-exit-row{justify-content:flex-start;margin-top:14px}
+@media(max-width:900px){
+ .run-projector-top,.run-projector-title{display:grid}
+ .run-projector-order{justify-content:flex-start}
+ .run-projector-lane{grid-template-columns:1fr}
+ .run-projector-percent{text-align:right}
+ .run-projector-track{margin-left:34px}
+}
