@@ -57,7 +57,9 @@ async function saveRoom(r){await cache().set(roomKey(r.code),r,{ttl:TTL});}
 async function game(code){return (await cache().get(gameKey(code)))||{phase:'lobby',version:1,chainCount:0,chain:[],assignments:{},players:[],lastPlayer:''};}
 async function save(code,g){await cache().set(gameKey(code),g,{ttl:TTL});}
 async function roster(code){const shards=await Promise.all(Array.from({length:SHARDS},(_,i)=>cache().get(rosterKey(code,i))));const out=[];for(const s of shards)if(s)for(const p of Object.values(s))if(p&&p.id&&p.name)out.push(p);return out.sort((a,b)=>(a.joinedAt||0)-(b.joinedAt||0));}
-async function join(code,id,name){const key=rosterKey(code,hash(id)%SHARDS);for(let a=0;a<5;a++){const cur=await cache().get(key)||{};const next={...cur,[id]:{id,name,joinedAt:cur[id]?.joinedAt||Date.now()}};await cache().set(key,next,{ttl:TTL});const v=await cache().get(key)||{};if(v[id])return v[id];await new Promise(r=>setTimeout(r,25+a*20));}throw new Error('join_race');}
+async function join(code,id,name,playerToken,rawName){const key=rosterKey(code,hash(id)%SHARDS);for(let a=0;a<5;a++){const cur=await cache().get(key)||{};const next={...cur,[id]:{id,name,rawName:rawName||name,playerToken,joinedAt:cur[id]?.joinedAt||Date.now()}};await cache().set(key,next,{ttl:TTL});const v=await cache().get(key)||{};if(v[id])return v[id];await new Promise(r=>setTimeout(r,25+a*20));}throw new Error('join_race');}
+function sameName(a,b){return String(a||'').trim().toLocaleLowerCase('he-IL')===String(b||'').trim().toLocaleLowerCase('he-IL');}
+function playerOK(p,t){return !!p&&(!p.playerToken||sameToken(clean(t,140),p.playerToken));}
 async function clearRoster(code){await Promise.all(Array.from({length:SHARDS},(_,i)=>cache().delete(rosterKey(code,i))));}
 function publicState(g){const last=g.chainCount?tileBy(g.chainCount):null;return{phase:g.phase,version:g.version||1,chainCount:g.chainCount||0,chain:(g.chain||[]).map(tileBy).filter(Boolean),currentClue:last?.clue||'',lastPlayer:g.lastPlayer||''};}
 function remainingIds(g){const used=new Set(g.chain||[]);const assigned=new Set(Object.values(g.assignments||{}).map(Number));return tiles.map(t=>t.id).filter(id=>id>1&&!used.has(id)&&!assigned.has(id));}
@@ -89,7 +91,13 @@ export default async function handler(req,res){
       const g=await game(code),teacher=sameToken(clean(req.query?.teacherToken,120),r.teacherToken),id=clean(req.query?.playerId,140);
       const livePlayers=g.phase==='lobby'?await roster(code):(g.players||[]);
       const out={...publicState(g),teacher,className:r.className||'',players:livePlayers.map(p=>({id:p.id,name:p.name}))};
-      if(id){const p=livePlayers.find(x=>x.id===id);out.joined=Boolean(p);out.myTile=g.assignments?.[id]?tileBy(g.assignments[id]):null;}
+      if(id){
+        const p=livePlayers.find(x=>x.id===id);
+        const playerToken=clean(req.query?.playerToken,140);
+        out.joined=Boolean(p&&playerOK(p,playerToken));
+        out.playerName=out.joined?(p.name||''):'';
+        out.myTile=out.joined&&g.assignments?.[id]?tileBy(g.assignments[id]):null;
+      }
       return res.json(out);
     }
 
@@ -98,18 +106,26 @@ export default async function handler(req,res){
 
     if(action==='join'){
       if(g.phase!=='lobby')return res.status(409).json({error:'game_started'});
-      const id=clean(b.playerId,140),name=clean(b.name,24);
-      if(!id||!name)return res.status(400).json({error:'bad_player'});
-      await join(code,id,name);
+      const rawName=clean(b.name,24);
+      if(!rawName)return res.status(400).json({error:'bad_player'});
+      const existing=await roster(code);
+      const same=existing.filter(p=>sameName(p.rawName||p.name,rawName)).length;
+      const name=same===0?rawName:`${rawName} (${same+1})`;
+      const id=crypto.randomUUID();
+      const playerToken=crypto.randomBytes(24).toString('hex');
+      await join(code,id,name,playerToken,rawName);
       g.version=(g.version||1)+1;
       await save(code,g);
       r.lastActiveAt=Date.now();await saveRoom(r);
-      return res.json({ok:true});
+      return res.json({ok:true,playerId:id,playerToken,displayName:name});
     }
 
     if(action==='play'){
       if(g.phase!=='playing')return res.status(409).json({error:'not_playing'});
-      const id=clean(b.playerId,140),assigned=Number(g.assignments?.[id]||0),needed=(g.chainCount||0)+1;
+      const id=clean(b.playerId,140);
+      const pAuth=(g.players||[]).find(p=>p.id===id)||(await roster(code)).find(p=>p.id===id);
+      if(!playerOK(pAuth,b.playerToken))return res.status(403).json({error:'forbidden'});
+      const assigned=Number(g.assignments?.[id]||0),needed=(g.chainCount||0)+1;
       if(!assigned)return res.status(409).json({error:'no_tile'});
       if(assigned!==needed)return res.json({correct:false});
       const player=(g.players||[]).find(p=>p.id===id);
