@@ -9,8 +9,13 @@ const token=q.get('token')||'';
 let timer=null;
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);
 function toast(t){toastBox.textContent=t;toastBox.classList.add('show');setTimeout(()=>toastBox.classList.remove('show'),1600);}
-function playerId(){const k='genetic-domino-player';let v=localStorage.getItem(k);if(!v){v=crypto.randomUUID?crypto.randomUUID():String(Date.now())+Math.random();localStorage.setItem(k,v);}return v;}
-const pid=playerId();
+function loadPlayerCredentials(){
+  try{return JSON.parse(localStorage.getItem('genetic-domino-player:'+code)||'null')||{};}catch(e){return {};}
+}
+let playerCred=loadPlayerCredentials();
+let pid=playerCred.playerId||'';
+let playerToken=playerCred.playerToken||'';
+let playerDisplayName=playerCred.displayName||'';
 const teacherUrl=(c,t)=>location.origin+'/teacher?code='+encodeURIComponent(c)+'&token='+encodeURIComponent(t);
 const joinUrl=()=>location.origin+'/join?code='+encodeURIComponent(code);
 const projectorUrl=()=>location.origin+'/projector?code='+encodeURIComponent(code)+'&token='+encodeURIComponent(token);
@@ -86,13 +91,13 @@ async function renderProjector(){
 
 function joinForm(saved){
  root.innerHTML='<div class="shell student-shell">'+hero('קובייה אחת. רגע אחד נכון.')+'<section class="card nameform"><h2>כניסה למשחק</h2><p class="muted">כתבו שם פרטי. לאחר שהמורה יתחיל, תקבלו קוביית דומינו. לחצו רק כשהמושג שבצד ימין של הקובייה שלכם מתאים לרמז הפתוח.</p><input id="playerName" maxlength="24" autocomplete="name" placeholder="השם שלי" value="'+esc(saved||'')+'"><button class="btn pri press" id="joinGame">כניסה ללובי</button><div class="feedback" id="joinFeedback"></div></section></div>';
- document.getElementById('joinGame').onclick=async()=>{const name=document.getElementById('playerName').value.trim();if(!name){document.getElementById('joinFeedback').textContent='כתבו שם פרטי.';return;}localStorage.setItem('genetic-domino-name',name);try{await post({action:'join',playerId:pid,name});renderStudent();}catch(e){document.getElementById('joinFeedback').textContent=e.code==='game_started'?'המשחק כבר התחיל. בקשו מהמורה לאפס אם צריך.':'לא ניתן להצטרף כרגע.';}};
+ document.getElementById('joinGame').onclick=async()=>{const name=document.getElementById('playerName').value.trim();if(!name){document.getElementById('joinFeedback').textContent='כתבו שם פרטי.';return;}localStorage.setItem('genetic-domino-name',name);try{const joined=await post({action:'join',name});pid=joined.playerId;playerToken=joined.playerToken;playerDisplayName=joined.displayName||name;localStorage.setItem('genetic-domino-player:'+code,JSON.stringify({playerId:pid,playerToken,displayName:playerDisplayName}));renderStudent();}catch(e){document.getElementById('joinFeedback').textContent=e.code==='game_started'?'המשחק כבר התחיל. בקשו מהמורה לאפס אם צריך.':'לא ניתן להצטרף כרגע.';}};
 }
 
 async function renderStudent(){
- const saved=localStorage.getItem('genetic-domino-name')||'';if(!saved){joinForm('');return;}
+ const saved=localStorage.getItem('genetic-domino-name')||'';if(!saved||!pid){joinForm(saved);return;}
  try{
-  const d=await get({playerId:pid});
+  const d=await get({playerId:pid,playerToken});
   if(!d.joined){joinForm(saved);return;}
   if(d.phase==='lobby'){
    root.innerHTML='<div class="shell student-shell">'+hero('מחכים יחד לרגע הנכון')+'<section class="card"><div class="waiting"><strong>'+esc(saved)+'</strong>, הצטרפת ללובי ✓<br>המורה יתחיל את המשחק ויחלק קוביות.</div></section></div>';
@@ -101,10 +106,10 @@ async function renderStudent(){
   }else{
    const mine=d.myTile;
    root.innerHTML='<div class="shell student-shell">'+hero('עקבו אחרי הרמז. אל תמהרו ללחוץ.')+'<section class="card"><div class="open-clue"><span>הרמז הפתוח</span>„'+esc(d.currentClue||'')+'”</div>'+progress(d.chainCount||0)+(mine?'<div class="mytile"><div class="tiny mytile-title">קוביית הדומינו שלך</div>'+tile(mine)+'<button class="btn pri press" id="playTile">המושג שלי מתאים לרמז</button><div class="feedback" id="playFeedback"></div></div>':'<div class="waiting spectator" style="margin-top:18px">כרגע אין לך קובייה פעילה. המשך לעקוב אחרי השרשרת — ייתכן שתקבל קובייה בהמשך.</div>')+'</section></div>';
-   const b=document.getElementById('playTile');if(b)b.onclick=async()=>{b.disabled=true;const f=document.getElementById('playFeedback');f.className='feedback';f.textContent='בודקים…';try{const r=await post({action:'play',playerId:pid});if(r.correct){f.className='feedback ok';f.textContent='✓ נכון! הקובייה שלך התחברה לשרשרת.';setTimeout(renderStudent,650);}else{f.className='feedback bad';f.textContent='עדיין לא. המשך לעקוב ולהמתין לרגע המתאים.';b.disabled=false;}}catch(e){f.className='feedback bad';f.textContent='לא ניתן לבדוק כרגע. נסו שוב.';b.disabled=false;}};
+   const b=document.getElementById('playTile');if(b)b.onclick=async()=>{b.disabled=true;const f=document.getElementById('playFeedback');f.className='feedback';f.textContent='בודקים…';try{const r=await post({action:'play',playerId:pid,playerToken});if(r.correct){f.className='feedback ok';f.textContent='✓ נכון! הקובייה שלך התחברה לשרשרת.';setTimeout(renderStudent,650);}else{f.className='feedback bad';f.textContent='עדיין לא. המשך לעקוב ולהמתין לרגע המתאים.';b.disabled=false;}}catch(e){f.className='feedback bad';f.textContent='לא ניתן לבדוק כרגע. נסו שוב.';b.disabled=false;}};
   }
-  startPoll(async()=>{try{const n=await get({playerId:pid});if(n.version!==d.version||n.phase!==d.phase||((n.myTile&&n.myTile.id)!==(d.myTile&&d.myTile.id)))renderStudent();}catch(e){}});
- }catch(e){joinForm(saved);}
+  startPoll(async()=>{try{const n=await get({playerId:pid,playerToken});if(n.version!==d.version||n.phase!==d.phase||((n.myTile&&n.myTile.id)!==(d.myTile&&d.myTile.id)))renderStudent();}catch(e){}});
+ }catch(e){if(e.code==='forbidden'||e.code==='student_not_found'){localStorage.removeItem('genetic-domino-player:'+code);pid='';playerToken='';playerDisplayName='';}joinForm(saved);}
 }
 
 if(path==='/'&&!code){renderHome();return;}
