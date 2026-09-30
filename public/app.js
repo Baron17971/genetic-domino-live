@@ -454,8 +454,32 @@ if(newPlayers.length!==oldPlayers.length){
 d.version=n.version}catch{}});
  }catch{root.innerHTML='<div class="shell">'+hero()+'<section class="card"><h2>לא ניתן לפתוח את מסך המורה</h2><a class="btn pri linkbtn" href="/">פתיחת משחק חדש</a></section></div>'}
 }
+function runProjectorTeamCard(team,placeMap){
+ const done=Number(team.chainCount||0),total=Math.max(1,Number(team.total||0)),pct=Math.max(0,Math.min(100,Math.round(done/total*100)));
+ const place=placeMap.get(team.id)||0;
+ const medal=place===1?'🥇':place===2?'🥈':place===3?'🥉':place?String(place):'';
+ const status=team.phase==='complete'?'הושלם':done+' מתוך '+total;
+ return '<article class="run-projector-lane '+(team.phase==='complete'?'complete':'')+' '+(place===1?'winner':'')+'" data-projector-team="'+esc(team.id)+'">'+
+ '<div class="run-projector-team"><div class="run-projector-place">'+(medal||'•')+'</div><div><strong>'+esc(team.name)+'</strong><span>'+esc(status)+'</span></div></div>'+
+ '<div class="run-projector-track"><div class="run-projector-fill" style="width:'+pct+'%"></div><div class="run-projector-domino" style="right:calc('+pct+'% - 18px)" aria-hidden="true">▮▮</div><span class="run-projector-finish">🏁</span></div>'+
+ '<div class="run-projector-percent">'+pct+'%</div></article>';
+}
+function renderRunProjector(d){
+ const teams=(d.runTeams||[]).slice();
+ const finished=teams.filter(t=>t.phase==='complete'&&Number(t.finishedAt||0)>0).sort((a,b)=>Number(a.finishedAt)-Number(b.finishedAt));
+ const placeMap=new Map(finished.map((t,i)=>[t.id,i+1]));
+ const order=finished.length?'<div class="run-projector-order"><span>סדר הגעה</span>'+finished.map((t,i)=>'<strong class="place-'+(i+1)+'">'+(i===0?'🥇':i===1?'🥈':i===2?'🥉':(i+1)+'.')+' '+esc(t.name)+'</strong>').join('')+'</div>':'<div class="run-projector-order waiting-order"><span>סדר הגעה</span><strong>עדיין אין מסיימים</strong></div>';
+ root.innerHTML='<div class="shell run-projector-shell">'+hero(d.className?'DomiKnow Run · '+d.className:'DomiKnow Run',d.title)+
+ '<section class="card run-projector-top"><div class="run-projector-code"><span>קוד כיתה</span><strong>'+esc(code)+'</strong></div><div class="joinbox"><div class="qr"><img alt="QR" src="/api/qr?text='+encodeURIComponent(joinUrl())+'"></div><div><strong>'+(d.phase==='lobby'?'סרקו והצטרפו למרוץ':d.phase==='playing'?'המרוץ בעיצומו':'המרוץ הסתיים')+'</strong><div class="muted">'+(d.players||[]).length+' תלמידים מחוברים</div></div></div></section>'+
+ '<section class="card run-projector-race"><div class="run-projector-title"><div><span class="setup-mode-pill">DomiKnow Run</span><h2>'+(d.phase==='complete'?'תוצאות המרוץ':'התקדמות הקבוצות')+'</h2></div>'+order+'</div>'+
+ '<div class="run-projector-lanes">'+teams.map(t=>runProjectorTeamCard(t,placeMap)).join('')+'</div>'+
+ (d.winnerTeamName?'<div class="run-projector-winner">🏆 '+esc(d.winnerTeamName)+' הגיעה ראשונה לפתרון!</div>':'')+
+ '</section><div class="btns projector-exit-row"><button class="btn ghost" id="exitProjector">יציאה ממצב מקרן</button></div></div>';
+ document.getElementById('exitProjector')?.addEventListener('click',()=>{if(window.opener){window.close()}else{location.href=teacherUrl(code,token)}});
+ startPoll(async()=>{try{const n=await get({teacherToken:token});if(n.version!==d.version)renderProjector()}catch{}});
+}
 async function renderProjector(){
- document.body.classList.add('projector');try{const d=await get({teacherToken:token});applyDesign(d);if(!d.teacher)throw new Error('auth');
+ document.body.classList.add('projector');try{const d=await get({teacherToken:token});applyDesign(d);if(!d.teacher)throw new Error('auth');if(d.mode==='run'){renderRunProjector(d);return}
  root.innerHTML='<div class="shell">'+hero(d.className?'תצוגת מקרן · '+d.className:'תצוגת מקרן',d.title)+'<section class="card"><div class="teacher-top"><div><div class="eyebrow">קוד כיתה</div><div class="code">'+esc(code)+'</div></div><div class="joinbox"><div class="qr"><img alt="QR" src="/api/qr?text='+encodeURIComponent(joinUrl())+'"></div><div><strong>'+(d.phase==='lobby'?'סרקו והצטרפו ללובי':d.phase==='playing'?'מי מחזיק את ההתאמה?':'המשחק הסתיים')+'</strong><div class="muted">'+(d.players||[]).length+' תלמידים מחוברים</div></div></div></div>'+(d.currentClue?'<div class="open-clue projector-clue"><span>ההתאמה הפתוחה</span>'+esc(d.currentClue)+'</div>':'')+'<div class="turn-timer projector-turn-timer" id="turnTimer"></div>'+progress(d.chainCount||0,d.tileCount)+'</section><section class="card">'+chainHtml((d.chain||[]).slice(-5))+(d.lastPlayer?'<div class="feedback ok last-player">✓ '+esc(d.lastPlayer)+' חיבר/ה את הקובייה האחרונה</div>':'')+(d.phase==='complete'?complete():'')+'</section><div class="btns"><button class="btn ghost" id="exitProjector">יציאה ממצב מקרן</button></div></div>';
  document.getElementById('exitProjector')?.addEventListener('click',()=>{if(window.opener){window.close()}else{location.href=teacherUrl(code,token)}});
  fitDominoText();updateTurnTimer(d);startPoll(async()=>{try{const n=await get({teacherToken:token});updateTurnTimer(n);if(n.chainCount>d.chainCount){playSuccessSound();showSuccessMoment('נוצר חיבור')}if(turnTiming(n).rotate){const x=await post({action:'tick',teacherToken:token});if(x.rotated){stableRerender(renderProjector);return}}if(n.version!==d.version)stableRerender(renderProjector)}catch{}})}catch{root.innerHTML='<div class="shell">'+hero()+'<section class="card"><h2>לא ניתן לפתוח תצוגת מקרן</h2></section></div>'}
