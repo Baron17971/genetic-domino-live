@@ -241,27 +241,94 @@ function renderHome(){
 }
 
 function renderSetup(){
- document.body.classList.remove('projector','landing');applyDesign(savedDesign());const last=localStorage.getItem('pairs-domino-last-teacher')||'';
- root.innerHTML='<div class="shell setup-shell">'+hero('יוצרים משחק חדש','DomiKnow')+'<div class="setup-topbar"><button class="btn ghost back-home" id="backHome">← חזרה לעיצוב</button></div>'+
- '<section class="card create-game-card" id="createGameSection"><div class="setup-mode-pill">'+(savedMode()==='run'?'DomiKnow Run':'DomiKnow Classic')+'</div><h2>יצירת משחק חדש</h2><div class="grid"><div><label class="field"><span>מקצוע</span><input id="subjectName" maxlength="60" placeholder="לדוגמה: ביולוגיה"></label><label class="field"><span>כיתה</span><input id="className" maxlength="60" placeholder="לדוגמה: ח׳2"></label><label class="field"><span>נושא</span><input id="topicName" maxlength="80" placeholder="לדוגמה: מערכת הנשימה"></label><label class="field"><span>מספר זוגות</span><input id="wantedPairs" type="number" min="4" max="40" value="20" inputmode="numeric"></label></div><div class="muted">הזינו את פרטי השיעור פעם אחת. המקצוע, הכיתה והנושא ייכנסו אוטומטית לפרומפט.<br><br>את הזוגות מזינים בפורמט:<br><strong>מושג | התאמה</strong></div></div>'+
- '<section class="prompt-helper"><div class="prompt-head"><div><strong>צריכים עזרה ביצירת הזוגות?</strong><span>ערכו את הפרומפט והעתיקו אותו לבינה המועדפת עליכם.</span></div><button class="btn ghost compact-btn" id="copyPrompt">העתקת פרומפט</button></div><textarea id="promptText" class="prompt-text">אני מורה ל__________ ומלמד/ת תלמידי כיתה ________ את הנושא: __________.\nצור עבורי מאגר של 20 זוגות למשחק דומינו לימודי.\n\nכל זוג צריך לכלול:\nמושג קצר | הגדרה / שאלה / תיאור שהתשובה עליו היא בדיוק אותו מושג\n\nהקפד על ניסוח קצר וברור, התאמה לגיל התלמידים, ללא כפילויות, ללא מושגים כמעט זהים, וללא כתיבת המושג עצמו בתוך ההגדרה.\nהמושג צריך להיות קצר ככל האפשר, רצוי עד 22 תווים. ההגדרה/התיאור צריכים להיות תמציתיים, רצוי עד 55 תווים. אם ניתן לקצר בלי לפגוע בדיוק — קצר.\n\nהחזר את התשובה בתוך בלוק קוד רגיל בלבד (plain text), ללא כותרת, ללא מספור, ללא bullets וללא טקסט לפני או אחרי בלוק הקוד.\n\nבתוך בלוק הקוד חייבות להיות בדיוק מספר השורות שביקשתי — שורה אחת לכל זוג.\nכל זוג נכתב בשורה אחת בלבד בפורמט:\nמושג | התאמה\n\nבסיום כל זוג לחץ Enter פעם אחת ועבור לשורה חדשה.\nאסור לכתוב שני זוגות באותה שורה ואסור להמשיך זוג חדש באותה שורה.\n\nדוגמה מדויקת למבנה הפלט בתוך בלוק הקוד:\nמיטוכונדריה | אברון שבו מתבצעת נשימה תאית\nריבוזום | אברון שבו מתבצע תרגום\nDNA | מולקולה הנושאת מידע תורשתי</textarea></section>'+ 
- '<div class="pairs-head"><div><strong>זוגות למשחק</strong><span>העתיקו את המאגר מהבינה. הכפתור למטה יטען אותו וייצור את המשחק.</span></div></div><label class="field pairs-field"><textarea id="pairs" placeholder="מיטוכונדריה | אברון שבו מתבצעת נשימה תאית\nריבוזום | אברון שבו מתבצע תרגום\nDNA | מולקולה הנושאת מידע תורשתי\n..."></textarea></label>'+
- '<div class="pair-help"><span class="count" id="pairCount">0 זוגות</span><span class="tiny">מינימום 4 · מקסימום 40 זוגות</span></div><div class="btns"><button class="btn pri combo-create" id="createGame">טעינת המאגר ויצירת משחק</button>'+(last?'<button class="btn ghost" id="resumeLast">חזרה למשחק האחרון</button>':'')+'</div><div id="homeFeedback" class="feedback"></div></section>'+
+ document.body.classList.remove('projector','landing');applyDesign(savedDesign());
+ const last=localStorage.getItem('pairs-domino-last-teacher')||'',draft=loadSetupDraft()||{};
+ const subjectOptions=['אני ישראלי','ביולוגיה','ביוטכנולוגיה','מדעים','מתמטיקה','עברית','אנגלית','היסטוריה','תנ״ך','ספרות','אזרחות','גאוגרפיה','כימיה','פיזיקה','מחשבים'];
+ const gradeOptions=['א׳','ב׳','ג׳','ד׳','ה׳','ו׳','ז׳','ח׳','ט׳','י׳','י״א','י״ב'];
+ const samplePairs=[
+  ['מיטוכונדריה','אברון שבו מתבצעת נשימה תאית'],['ריבוזום','אברון שבו מתבצע תרגום'],['DNA','מולקולה הנושאת מידע תורשתי'],
+  ['גרעין','אברון המכיל את רוב החומר התורשתי'],['קרום התא','מעטפת בררנית המווסתת מעבר חומרים'],['ציטופלזמה','הסביבה התאית שבה נמצאים האברונים'],
+  ['דיפוזיה','מעבר חלקיקים מריכוז גבוה לנמוך'],['אוסמוזה','מעבר מים דרך קרום בררני'],['אנזים','חלבון המזרז תגובה כימית'],
+  ['ATP','מולקולה המשמשת מטבע אנרגיה בתא'],['כרומוזום','מבנה המכיל DNA וחלבונים'],['גן','קטע DNA המכיל מידע לתוצר'],
+  ['חלבון','פולימר הבנוי מחומצות אמינו'],['פוטוסינתזה','תהליך יצירת חומר אורגני בעזרת אור'],['כלורופלסט','אברון שבו מתרחשת פוטוסינתזה'],
+  ['הומאוסטזיס','שמירה על סביבה פנימית יציבה'],['מיטוזה','חלוקת תא היוצרת שני תאי בת דומים'],['מיוזה','חלוקה היוצרת תאי מין'],
+  ['נשימה תאית','תהליך הפקת אנרגיה זמינה מחומר אורגני'],['מוטציה','שינוי ברצף ה-DNA']
+ ];
+ root.innerHTML='<div class="shell setup-shell">'+hero('יוצרים פעילות חדשה','DomiKnow')+'<div class="setup-topbar"><button class="btn ghost back-home" id="backHome">← חזרה</button></div>'+
+ '<section class="card create-game-card" id="createGameSection"><div class="setup-mode-pill">'+(savedMode()==='run'?'DomiKnow Run':'DomiKnow Classic')+'</div><h2>פרטי הפעילות</h2>'+
+ '<div class="grid"><div>'+
+ '<label class="field"><span>מקצוע</span><select id="subjectName"><option value="">בחרו מקצוע</option>'+subjectOptions.map(x=>'<option value="'+esc(x)+'">'+esc(x)+'</option>').join('')+'</select></label>'+
+ '<label class="field"><span>נושא</span><input id="topicName" maxlength="80" placeholder="לדוגמה: מערכת הנשימה"></label>'+
+ '<label class="field"><span>כיתה</span><select id="className"><option value="">בחרו כיתה</option>'+gradeOptions.map(x=>'<option value="'+esc(x)+'">'+esc(x)+'</option>').join('')+'</select></label>'+
+ '</div><div><h3>הגדרות משחק</h3><label class="field"><span>מספר זוגות</span><input id="wantedPairs" type="number" min="4" max="40" value="20" inputmode="numeric"></label><div class="muted">מצב המשחק, הקבוצות, העיצוב ומספר הזוגות נשארים הגדרות ייחודיות של DomiKnow.</div></div></div>'+
+ '<section class="prompt-helper"><div class="prompt-head"><div><strong>יצירת מאגר בעזרת AI</strong><span>כל זוג בשורה נפרדת בפורמט מושג | התאמה.</span></div><button class="btn ghost compact-btn" id="copyPrompt">העתקת פרומפט</button></div><textarea id="promptText" class="prompt-text">אני מורה ל__________ ומלמד/ת תלמידי כיתה ________ את הנושא: __________.\nצור עבורי מאגר של 20 זוגות למשחק דומינו לימודי.\n\nהחזר את כל התשובה בתוך חלונית קוד אחת בלבד, ללא טקסט לפניה או אחריה.\nבתוך חלונית הקוד החזר בדיוק 20 שורות בלבד.\nכל זוג חייב להופיע בשורה אחת בלבד בפורמט:\nמושג | התאמה\n\nאין להוסיף מספור, bullets, כותרות או שורות ריקות.\nכל זוג חייב להיות שונה וברור, והמושג עצמו לא יופיע בתוך ההתאמה.</textarea></section>'+
+ '<div class="pairs-head"><div><strong>מאגר התוכן</strong><span>הדביקו זוג אחד בכל שורה.</span></div></div>'+
+ '<label class="field pairs-field"><textarea id="pairs" placeholder="מיטוכונדריה | אברון שבו מתבצעת נשימה תאית\nריבוזום | אברון שבו מתבצע תרגום"></textarea></label>'+
+ '<div class="pair-help"><span class="count" id="pairCount">0 זוגות</span><span class="tiny">מינימום 4 · מקסימום 40 זוגות</span></div>'+
+ '<div class="btns"><button class="btn ghost" id="loadExample">טען דוגמה</button><button class="btn ghost" id="loadBank">טען למאגר</button><button class="btn ghost" id="editConcepts" hidden>ערוך מושגים</button></div>'+
+ '<div id="pairsEditor" hidden></div>'+
+ '<div class="btns"><button class="btn ghost" id="archiveActivity">העבר לארכיון</button><button class="btn pri combo-create" id="createGame">צור פעילות</button>'+(last?'<button class="btn ghost" id="resumeLast">חזרה למשחק האחרון</button>':'')+'</div>'+
+ '<div id="homeFeedback" class="feedback"></div></section>'+
  '<section class="card how"><div><strong>1</strong><span>המורה מזין זוגות</span></div><div><strong>2</strong><span>התלמידים מקבלים קוביות</span></div><div><strong>3</strong><span>הכיתה בונה שרשרת</span></div></section></div>';
- document.getElementById('backHome').onclick=()=>savedMode()==='run'?renderGroups():renderMode;
- const ta=document.getElementById('pairs'),count=document.getElementById('pairCount'),btn=document.getElementById('createGame'),copyPrompt=document.getElementById('copyPrompt'),promptText=document.getElementById('promptText'),subjectName=document.getElementById('subjectName'),className=document.getElementById('className'),topicName=document.getElementById('topicName'),wantedPairs=document.getElementById('wantedPairs');
- const refresh=()=>{const n=parsePairs(ta.value).length,wanted=Math.max(4,Math.min(40,Number(wantedPairs.value)||20)),missing=Math.max(0,wanted-n);count.textContent=missing? n+' מתוך '+wanted+' זוגות · חסרים '+missing:n+' מתוך '+wanted+' זוגות ✓'};
- const syncPrompt=()=>{const subject=subjectName.value.trim()||'__________',klass=className.value.trim()||'__________',topic=topicName.value.trim()||'__________',wanted=Math.max(4,Math.min(40,Number(wantedPairs.value)||20));const lines=promptText.value.split('\n');lines[0]='אני מורה ל'+subject+' ומלמד/ת תלמידי כיתה '+klass+' את הנושא: '+topic+'.';lines[1]='צור עבורי מאגר של '+wanted+' זוגות למשחק דומינו לימודי.';promptText.value=lines.join('\n')};
- [subjectName,className,topicName].forEach(el=>el.addEventListener('input',syncPrompt));
- wantedPairs.addEventListener('input',()=>{syncPrompt();refresh()});wantedPairs.addEventListener('change',()=>{syncPrompt();refresh()});
- ta.addEventListener('input',refresh);ta.addEventListener('change',refresh);ta.addEventListener('paste',()=>setTimeout(refresh,0));
- syncPrompt();refresh();
- copyPrompt.onclick=async()=>{const t=promptText.value;try{await navigator.clipboard.writeText(t);toast('הפרומפט הועתק')}catch{promptText.select();document.execCommand('copy');toast('הפרומפט הועתק')}};
 
- btn.onclick=async()=>{const f=document.getElementById('homeFeedback'),wanted=Math.max(4,Math.min(40,Number(wantedPairs.value)||20));btn.disabled=true;f.className='feedback';try{let current=ta.value.trim();if(!current){f.textContent='טוען את המאגר…';let t='';try{if(navigator.clipboard?.readText){t=await Promise.race([navigator.clipboard.readText(),new Promise(resolve=>setTimeout(()=>resolve(''),900))])}}catch{}if(t.trim()){t=t.replace(/^\s*\`\`\`(?:text|txt|plaintext)?\s*/i,'').replace(/\s*\`\`\`\s*$/,'').trim();ta.value=t;current=t}}const pairs=parsePairs(ta.value);refresh();if(pairs.length<wanted){f.className='feedback bad';f.textContent='נמצאו '+pairs.length+' מתוך '+wanted+' זוגות. הדביקו את המאגר בשדה הזוגות ונסו שוב.';btn.disabled=false;ta.focus();return}f.textContent='יוצר משחק…';const design=savedDesign(),mode=savedMode(),runGroups=savedRunGroups();const d=await post({action:'create',title:topicName.value.trim(),className:className.value.trim(),subject:subjectName.value.trim(),topic:topicName.value.trim(),palette:design.palette,pattern:design.pattern,mode,groups:mode==='run'?runGroups.names.map(name=>({name})):[],requestedPairs:wanted,pairs},false);const u=teacherUrl(d.code,d.teacherToken);localStorage.setItem('pairs-domino-last-teacher',u);location.href=u}catch(e){f.className='feedback bad';f.textContent=e.code==='not_enough_pairs'?'אין מספיק זוגות ביחס למספר שבחרת.':'לא ניתן ליצור משחק כרגע.';btn.disabled=false;refresh()}};
+ document.getElementById('backHome').onclick=renderTeacherEntry;
+ const ta=document.getElementById('pairs'),count=document.getElementById('pairCount'),btn=document.getElementById('createGame'),copyPrompt=document.getElementById('copyPrompt'),promptText=document.getElementById('promptText'),subjectName=document.getElementById('subjectName'),className=document.getElementById('className'),topicName=document.getElementById('topicName'),wantedPairs=document.getElementById('wantedPairs'),feedback=document.getElementById('homeFeedback'),editor=document.getElementById('pairsEditor'),editBtn=document.getElementById('editConcepts');
+ let loadedPairs=[];
+
+ const payload=()=>({subject:subjectName.value.trim(),topic:topicName.value.trim(),className:className.value.trim(),wantedPairs:Math.max(4,Math.min(40,Number(wantedPairs.value)||20)),pairs:loadedPairs.length?loadedPairs:parsePairs(ta.value),design:savedDesign(),mode:savedMode(),runGroups:savedRunGroups(),projectId:draft.projectId||''});
+ const saveDraftNow=()=>saveSetupDraft(payload());
+ const refresh=()=>{const n=parsePairs(ta.value).length,wanted=Math.max(4,Math.min(40,Number(wantedPairs.value)||20)),missing=Math.max(0,wanted-n);count.textContent=missing?n+' מתוך '+wanted+' זוגות · חסרים '+missing:n+' מתוך '+wanted+' זוגות ✓'};
+ const syncPrompt=()=>{const subject=subjectName.value.trim()||'__________',klass=className.value.trim()||'__________',topic=topicName.value.trim()||'__________',wanted=Math.max(4,Math.min(40,Number(wantedPairs.value)||20));const lines=promptText.value.split('\n');lines[0]='אני מורה ל'+subject+' ומלמד/ת תלמידי כיתה '+klass+' את הנושא: '+topic+'.';lines[1]='צור עבורי מאגר של '+wanted+' זוגות למשחק דומינו לימודי.';const exact=lines.findIndex(x=>x.startsWith('בתוך חלונית הקוד החזר בדיוק '));if(exact>=0)lines[exact]='בתוך חלונית הקוד החזר בדיוק '+wanted+' שורות בלבד.';promptText.value=lines.join('\n')};
+ const renderEditor=()=>{
+   editor.innerHTML='<div class="items-editor"><div class="items-editor-head"><div><h3>עריכת המושגים</h3><p>'+loadedPairs.length+' זוגות במאגר</p></div><button class="btn ghost compact-btn" id="addPair">＋ הוסף זוג</button></div><div class="items-list">'+
+   loadedPairs.map((p,i)=>'<article class="item-card" data-pair-row="'+i+'"><div class="item-number">'+(i+1)+'</div><div class="item-two"><label>מושג<input data-left="'+i+'" value="'+esc(p.left)+'"></label><label>התאמה<input data-right="'+i+'" value="'+esc(p.right)+'"></label></div><button class="remove-item" data-remove="'+i+'">מחק זוג</button></article>').join('')+
+   '</div><button class="save-items" id="savePairChanges">שמור שינויים</button></div>';
+   editor.querySelectorAll('[data-left]').forEach(x=>x.oninput=()=>loadedPairs[Number(x.dataset.left)].left=x.value);
+   editor.querySelectorAll('[data-right]').forEach(x=>x.oninput=()=>loadedPairs[Number(x.dataset.right)].right=x.value);
+   editor.querySelectorAll('[data-remove]').forEach(x=>x.onclick=()=>{loadedPairs.splice(Number(x.dataset.remove),1);renderEditor()});
+   document.getElementById('addPair').onclick=()=>{loadedPairs.push({left:'',right:''});renderEditor()};
+   document.getElementById('savePairChanges').onclick=()=>{loadedPairs=loadedPairs.map(x=>({left:x.left.trim(),right:x.right.trim()})).filter(x=>x.left&&x.right).slice(0,40);ta.value=loadedPairs.map(x=>x.left+' | '+x.right).join('\n');editor.hidden=true;editBtn.textContent='ערוך מושגים';refresh();saveDraftNow();toast('השינויים נשמרו')};
+ };
+ const loadBank=()=>{loadedPairs=parsePairs(ta.value);if(!loadedPairs.length){feedback.className='feedback bad';feedback.textContent='לא זוהו זוגות. כל שורה צריכה להיות: מושג | התאמה';return false}feedback.className='feedback ok';feedback.textContent='המאגר נטען: '+loadedPairs.length+' זוגות.';editBtn.hidden=false;editor.hidden=true;editBtn.textContent='ערוך מושגים';refresh();saveDraftNow();return true};
+
+ if(draft){
+   if(draft.subject&&!subjectOptions.includes(draft.subject)){subjectName.insertAdjacentHTML('beforeend','<option value="'+esc(draft.subject)+'">'+esc(draft.subject)+'</option>')}
+   if(draft.className&&!gradeOptions.includes(draft.className)){className.insertAdjacentHTML('beforeend','<option value="'+esc(draft.className)+'">'+esc(draft.className)+'</option>')}
+   subjectName.value=draft.subject||'';topicName.value=draft.topic||'';className.value=draft.className||'';wantedPairs.value=draft.wantedPairs||20;
+   loadedPairs=Array.isArray(draft.pairs)?draft.pairs.map(x=>({left:x.left||'',right:x.right||''})).filter(x=>x.left&&x.right):[];
+   ta.value=loadedPairs.map(x=>x.left+' | '+x.right).join('\n');if(loadedPairs.length)editBtn.hidden=false;
+ }
+
+ [subjectName,className,topicName].forEach(el=>el.addEventListener('change',()=>{syncPrompt();saveDraftNow()}));
+ topicName.addEventListener('input',()=>{syncPrompt();saveDraftNow()});
+ wantedPairs.addEventListener('input',()=>{syncPrompt();refresh();saveDraftNow()});
+ ta.addEventListener('input',()=>{loadedPairs=[];editBtn.hidden=true;editor.hidden=true;refresh();saveDraftNow()});
+ ta.addEventListener('paste',()=>setTimeout(()=>{refresh();saveDraftNow()},0));
+ syncPrompt();refresh();
+
+ copyPrompt.onclick=async()=>{try{await navigator.clipboard.writeText(promptText.value);toast('הפרומפט הועתק')}catch{promptText.select();document.execCommand('copy');toast('הפרומפט הועתק')}};
+ document.getElementById('loadExample').onclick=()=>{const wanted=Math.max(4,Math.min(40,Number(wantedPairs.value)||20));const ex=Array.from({length:wanted},(_,i)=>samplePairs[i%samplePairs.length]).map((x,i)=>({left:x[0]+(i>=samplePairs.length?' '+(Math.floor(i/samplePairs.length)+1):''),right:x[1]+(i>=samplePairs.length?' — דוגמה '+(i+1):'')}));ta.value=ex.map(x=>x.left+' | '+x.right).join('\n');loadedPairs=ex;editBtn.hidden=false;refresh();saveDraftNow();feedback.className='feedback ok';feedback.textContent='נטענה דוגמה בפורמט הנכון.'};
+ document.getElementById('loadBank').onclick=loadBank;
+ editBtn.onclick=()=>{if(!loadedPairs.length&&!loadBank())return;editor.hidden=!editor.hidden;editBtn.textContent=editor.hidden?'ערוך מושגים':'סגור עריכה';if(!editor.hidden)renderEditor()};
+
+ document.getElementById('archiveActivity').onclick=async()=>{
+   if(!subjectName.value||!topicName.value||!className.value){feedback.className='feedback bad';feedback.textContent='יש להשלים מקצוע, נושא וכיתה לפני העברה לארכיון.';return}
+   if(!loadedPairs.length&&!loadBank())return;
+   const b=document.getElementById('archiveActivity');b.disabled=true;b.textContent='שומר…';
+   try{const p=payload(),id=await saveProjectToXsite(p,p.projectId||'');if(id){saveSetupDraft({...p,projectId:id});draft.projectId=id;b.textContent='עדכן בארכיון';feedback.className='feedback ok';feedback.textContent='הפעילות נשמרה בארכיון MyXsite ✓'}}catch{feedback.className='feedback bad';feedback.textContent='לא הצלחנו לשמור בארכיון.'}finally{b.disabled=false;if(b.textContent==='שומר…')b.textContent='העבר לארכיון'}
+ };
+ if(draft.projectId)document.getElementById('archiveActivity').textContent='עדכן בארכיון';
+
+ btn.onclick=async()=>{
+   const wanted=Math.max(4,Math.min(40,Number(wantedPairs.value)||20));
+   if(!subjectName.value||!topicName.value||!className.value){feedback.className='feedback bad';feedback.textContent='יש להשלים מקצוע, נושא וכיתה.';return}
+   if(!loadedPairs.length&&!loadBank())return;
+   const pairs=loadedPairs.slice(0,40);if(pairs.length<wanted){feedback.className='feedback bad';feedback.textContent='נמצאו '+pairs.length+' מתוך '+wanted+' זוגות.';return}
+   btn.disabled=true;feedback.className='feedback';feedback.textContent='יוצר פעילות…';
+   try{const design=savedDesign(),mode=savedMode(),runGroups=savedRunGroups();const d=await post({action:'create',title:topicName.value.trim(),className:className.value.trim(),subject:subjectName.value.trim(),topic:topicName.value.trim(),palette:design.palette,pattern:design.pattern,mode,groups:mode==='run'?runGroups.names.map(name=>({name})):[],requestedPairs:wanted,pairs},false);const u=teacherUrl(d.code,d.teacherToken);localStorage.setItem('pairs-domino-last-teacher',u);localStorage.setItem('domiknow-live:'+d.code,JSON.stringify({teacherToken:d.teacherToken,code:d.code,updatedAt:Date.now()}));saveDraftNow();location.href=u}catch(e){feedback.className='feedback bad';feedback.textContent=e.code==='not_enough_pairs'?'אין מספיק זוגות ביחס למספר שבחרת.':'לא ניתן ליצור פעילות כרגע.';btn.disabled=false}
+ };
  if(last)document.getElementById('resumeLast').onclick=()=>location.href=last;
 }
-
 function runProgressCard(team,livePlayers=[],winnerTeamId=''){
  const roster=(livePlayers||[]).filter(p=>p.groupId===team.id);
  const done=Number(team.chainCount||0),total=Number(team.total||0),pct=total?Math.round(done/total*100):0,isWinner=winnerTeamId===team.id,isDone=team.phase==='complete';
