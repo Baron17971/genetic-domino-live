@@ -189,6 +189,33 @@ function renderGroups(){
  };
 }
 
+
+async function renderTeacherEntry(){
+ clearInterval(timer);document.body.classList.remove('projector','landing');applyDesign(savedDesign());
+ const s=await requireTeacherAuth('?teacher=1');if(!s)return;
+ let projects=[];try{const {data}=await xsiteCore.from('teacher_projects').select('id,title,updated_at').eq('teacher_id',s.user.id).eq('app_id','domiknow').order('updated_at',{ascending:false}).limit(50);projects=data||[]}catch{}
+ const draft=loadSetupDraft();
+ root.innerHTML='<div class="shell setup-shell">'+hero('צד המורה','DomiKnow')+
+ '<section class="card create-game-card"><h2>כניסת מורה</h2><p class="muted">צרו פעילות חדשה, טענו פעילות קיימת או חזרו לכיתה חיה באמצעות קוד.</p>'+
+ '<div class="btns teacher-entry-actions">'+
+ (draft?'<button class="btn pri" id="continueDraft">המשך טיוטה</button>':'')+
+ '<button class="btn pri" id="newActivity">צור פעילות חדשה</button>'+
+ '<button class="btn ghost" id="loadActivity">טען פעילות קיימת</button>'+
+ '<button class="btn ghost" id="openByCode">פתח באמצעות קוד</button></div>'+
+ '<div id="teacherEntryPanel"></div></section></div>';
+ const panel=document.getElementById('teacherEntryPanel');
+ document.getElementById('continueDraft')?.addEventListener('click',()=>{restoreDraftSession(draft);renderSetup()});
+ document.getElementById('newActivity').onclick=()=>{if(draft&&!confirm('לפתוח פעילות חדשה? הטיוטה הנוכחית תוחלף.'))return;localStorage.removeItem(SETUP_DRAFT_KEY);renderDesign()};
+ document.getElementById('loadActivity').onclick=()=>{
+   panel.innerHTML='<div class="field" style="margin-top:16px"><span>פעילות שמורה</span><select id="savedProjectSelect"><option value="">בחרו פעילות</option>'+projects.map(p=>'<option value="'+esc(p.id)+'">'+esc(p.title||'DomiKnow')+'</option>').join('')+'</select></div><button class="btn pri" id="openSavedProject">פתח פעילות</button>';
+   document.getElementById('openSavedProject').onclick=async()=>{const id=document.getElementById('savedProjectSelect').value;if(!id)return;try{const p=await loadProjectFromXsite(id);const d=p.payload||{};saveSetupDraft({...d,projectId:id});restoreDraftSession(d);renderSetup()}catch{toast('לא הצלחנו לטעון את הפעילות')}};
+ };
+ document.getElementById('openByCode').onclick=()=>{
+   panel.innerHTML='<div class="field" style="margin-top:16px"><span>קוד פעילות / כיתה</span><input id="existingGameCode" inputmode="numeric" maxlength="6" placeholder="לדוגמה: 482731"></div><button class="btn pri" id="openExistingGame">פתח פעילות</button><div class="feedback" id="openCodeFeedback"></div>';
+   document.getElementById('openExistingGame').onclick=()=>{const c=(document.getElementById('existingGameCode').value||'').replace(/\D/g,'').slice(0,6),fb=document.getElementById('openCodeFeedback');if(c.length!==6){fb.textContent='יש להזין קוד בן 6 ספרות.';return}try{const saved=JSON.parse(localStorage.getItem('domiknow-live:'+c)||'null');if(saved?.teacherToken){location.href=teacherUrl(c,saved.teacherToken);return}}catch{}fb.textContent='לא נמצאה הרשאת מורה לקוד הזה בדפדפן זה.'};
+ };
+}
+
 function renderDesign(){
  clearInterval(timer);document.body.classList.remove('projector','landing');
  let design=savedDesign();applyDesign(design);
@@ -206,7 +233,7 @@ function renderHome(){
  root.innerHTML='<div class="home-only">'+homeVisual()+
  '<div class="home-demo-modal" id="homeDemoModal" hidden><div class="home-demo-backdrop" id="closeDemoBackdrop"></div><section class="home-demo-panel" role="dialog" aria-modal="true" aria-label="דוגמה למשחק DomiKnow"><button type="button" class="demo-close" id="closeDemo" aria-label="סגירת הדוגמה">×</button><div class="demo-kicker">DomiKnow · דוגמה חיה</div><h2>כך נראית התאמה במשחק</h2><div class="open-clue"><span>ההתאמה הפתוחה</span>תהליך יצירת מזון בצמחים בעזרת אור השמש</div><div class="demo-sample-tile">'+tile({left:'פוטוסינתזה',right:'תהליך יצירת מזון בצמחים בעזרת אור השמש'})+'</div><div class="feedback ok">✓ זו ההתאמה הנכונה</div></section></div></div>';
  const teacher=document.getElementById('homeTeacherStart'),demo=document.getElementById('homeDemoStart'),modal=document.getElementById('homeDemoModal');
- if(teacher)teacher.onclick=renderDesign;
+ if(teacher)teacher.onclick=()=>renderTeacherEntry();
  const close=()=>{if(modal)modal.hidden=true};
  if(demo)demo.onclick=()=>{if(modal){modal.hidden=false;fitDominoText()}};
  document.getElementById('closeDemo')?.addEventListener('click',close);
