@@ -15,14 +15,30 @@ const XSITE_KEY='sb_publishable_DJN48TNChvPce3MZ7bDaiw_5Q8Eam6x';
 const xsiteCore=window.supabase?.createClient?window.supabase.createClient(XSITE_URL,XSITE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}}):null;
 const SETUP_DRAFT_KEY='domiknow-teacher-draft-v1';
 
+async function consumeBridgeSession(){
+ if(!xsiteCore)return null;
+ const hash=new URLSearchParams(location.hash.replace(/^#/,''));
+ if(hash.get('oauth_bridge')!=='1')return null;
+ const access_token=hash.get('access_token')||'',refresh_token=hash.get('refresh_token')||'';
+ if(!access_token||!refresh_token)return null;
+ const {data,error}=await xsiteCore.auth.setSession({access_token,refresh_token});
+ if(!error){history.replaceState({},document.title,location.pathname+location.search);return data?.session||null}
+ return null;
+}
 async function xsiteTeacherSession(){
  if(!xsiteCore)return null;
- try{const {data}=await xsiteCore.auth.getSession();return data?.session||null}catch{return null}
+ try{await consumeBridgeSession();const {data}=await xsiteCore.auth.getSession();return data?.session||null}catch{return null}
+}
+function redirectToXsiteGoogle(target){
+ const bridge=new URL('https://xsite-live-anats-projects-8c3e7bfa.vercel.app/');
+ bridge.searchParams.set('auth_for','domiknow');
+ bridge.searchParams.set('next',target);
+ location.assign(bridge.toString());
 }
 async function requireTeacherAuth(returnQuery='?teacher=1'){
  const s=await xsiteTeacherSession();if(s)return s;
  if(!xsiteCore){toast('חיבור Google אינו זמין כרגע');return null}
- await xsiteCore.auth.signInWithOAuth({provider:'google',options:{redirectTo:'https://domiknow.vercel.app/'+returnQuery,queryParams:{access_type:'offline',prompt:'select_account'}}});
+ redirectToXsiteGoogle('https://domiknow.vercel.app/'+returnQuery);
  return null;
 }
 function loadSetupDraft(){
