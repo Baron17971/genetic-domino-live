@@ -30,7 +30,7 @@ async function xsiteTeacherSession(){
  try{await consumeBridgeSession();const {data}=await xsiteCore.auth.getSession();return data?.session||null}catch{return null}
 }
 function redirectToXsiteGoogle(target){
- const bridge=new URL('https://xsite-live-anats-projects-8c3e7bfa.vercel.app/');
+ const bridge=new URL('https://xsite-live.vercel.app/');
  bridge.searchParams.set('auth_for','domiknow');
  bridge.searchParams.set('next',target);
  location.assign(bridge.toString());
